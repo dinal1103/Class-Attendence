@@ -1,95 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* -------------------------------------------------------
-   Global Styles — Premium Academic Theme
-   ------------------------------------------------------- */
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
 
-:root {
-    --sidebar-width: 280px;
+  body {
+    @apply font-sans text-surface-900 antialiased;
+    background: radial-gradient(circle at top left, theme('colors.primary.50') 0%, theme('colors.surface.50') 40%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-surface-400;
+  }
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+@layer utilities {
+  .glass {
+    @apply bg-white/80 backdrop-blur-xl border border-white/20;
+  }
 
-body {
-    font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    background-color: #f8fafc;
-    color: #0f172a;
-    overflow-x: hidden;
-}
-
-/* Scrollbar styling - Premium Minimalist */
-::-webkit-scrollbar {
-    width: 5px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
-}
-
-/* -------------------------------------------------------
-   Premium UI Utilities
-   ------------------------------------------------------- */
-
-.glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/20;
-}
-
-.glass-dark {
-    @apply bg-slate-900/80 backdrop-blur-xl border border-white/10;
-}
-
-.premium-shadow {
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08), 0 20px 25px -5px rgba(0, 0, 0, 0.03);
-}
-
-.text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-indigo-600 to-violet-700;
-}
-
-/* Skeleton loader animation - Enhanced */
-.skeleton {
-    @apply bg-slate-200 relative overflow-hidden;
-}
-
-.skeleton::after {
-    content: "";
-    @apply absolute inset-0;
-    background: linear-gradient(90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.5) 50%,
-            transparent 100%);
-    animation: shimmer 2s infinite linear;
-}
-
-@keyframes shimmer {
-    0% {
-        transform: translateX(-100%);
-    }
-
-    100% {
-        transform: translateX(100%);
-    }
-}
-
-/* Framer Motion Helper Classes */
-.motion-safe-animate {
-    backface-visibility: hidden;
-    perspective: 1000px;
+  .glass-dark {
+    @apply bg-surface-900/80 backdrop-blur-xl border border-surface-700/30;
+  }
 }

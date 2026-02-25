@@ -1,16 +1,12 @@
 const mongoose = require('mongoose');
 const config = require('./index');
 
-/**
- * Connects to MongoDB using the URI from configuration.
- * Exits the process on connection failure — fail fast in production.
- */
 const connectDB = async () => {
     try {
-        const conn = await mongoose.connect(config.database.mongodb.uri);
-        console.log(`[DB] MongoDB connected: ${conn.connection.host}`);
-    } catch (error) {
-        console.error(`[DB] Connection failed: ${error.message}`);
+        const conn = await mongoose.connect(config.db.uri);
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
+    } catch (err) {
+        console.error(`MongoDB connection error: ${err.message}`);
         process.exit(1);
     }
 };

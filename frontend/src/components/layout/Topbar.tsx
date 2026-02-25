@@ -1,126 +1,65 @@
 /**
- * Topbar Component
- * Header with breadcrumbs, search, and notifications
+ * Topbar — Desktop top navigation bar.
  */
-
-import * as React from 'react';
-import { cn } from '@/lib/utils';
-import { useLocation, Link } from 'react-router-dom';
-import {
-  Menu,
-  Bell,
-  Search,
-  ChevronRight,
-} from 'lucide-react';
+import { Menu, Bell, LogOut } from 'lucide-react';
 import { Button } from '@/components/primitives/Button';
-
-// Breadcrumb mapping
-const breadcrumbMap: Record<string, string> = {
-  '': 'Dashboard',
-  classes: 'Classes',
-  attendance: 'Attendance',
-  'face-enroll': 'Face Enrollment',
-  disputes: 'Disputes',
-  enrollments: 'Enrollments',
-  overrides: 'Overrides',
-  reports: 'Reports',
-  approvals: 'Approvals',
-  audit: 'Audit Logs',
-};
+import useAuthStore from '@/store/authStore';
+import { getInitials } from '@/lib/utils';
 
 interface TopbarProps {
-  className?: string;
-  onMenuClick?: () => void;
-  notificationCount?: number;
+    onMenuClick: () => void;
+    notificationCount?: number;
 }
 
-const Topbar = React.forwardRef<HTMLDivElement, TopbarProps>(
-  ({ className, onMenuClick, notificationCount = 0 }, ref) => {
-    const location = useLocation();
-
-    // Generate breadcrumbs from current path
-    const breadcrumbs = React.useMemo(() => {
-      const pathParts = location.pathname.split('/').filter(Boolean);
-      const crumbs = [];
-      let currentPath = '';
-
-      for (const part of pathParts) {
-        currentPath += `/${part}`;
-        const label = breadcrumbMap[part] || part.charAt(0).toUpperCase() + part.slice(1);
-        crumbs.push({ label, path: currentPath });
-      }
-
-      return crumbs;
-    }, [location.pathname]);
+export function Topbar({ onMenuClick, notificationCount = 0 }: TopbarProps) {
+    const { user, logout } = useAuthStore();
 
     return (
-      <header
-        ref={ref}
-        className={cn(
-          'h-16 bg-white border-b border-surface-200 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30',
-          className
-        )}
-      >
-        {/* Left Section - Mobile Menu & Breadcrumbs */}
-        <div className="flex items-center gap-4">
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onMenuClick}
-            className="lg:hidden"
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
-
-          {/* Breadcrumbs */}
-          <nav className="hidden md:flex items-center text-sm">
-            {breadcrumbs.map((crumb, index) => {
-              const isLast = index === breadcrumbs.length - 1;
-
-              return (
-                <React.Fragment key={crumb.path}>
-                  {index > 0 && (
-                    <ChevronRight className="w-4 h-4 mx-2 text-surface-400" />
-                  )}
-                  {isLast ? (
-                    <span className="font-medium text-surface-900">
-                      {crumb.label}
-                    </span>
-                  ) : (
-                    <Link
-                      to={crumb.path}
-                      className="text-surface-500 hover:text-surface-700 transition-colors"
+        <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-2xl border-b border-surface-100 shadow-sm">
+            <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+                {/* Left: Mobile hamburger */}
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={onMenuClick}
+                        className="lg:hidden w-10 h-10 rounded-lg flex items-center justify-center text-surface-500 hover:bg-surface-100 transition-colors"
                     >
-                      {crumb.label}
-                    </Link>
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </nav>
-        </div>
+                        <Menu className="w-5 h-5" />
+                    </button>
 
-        {/* Right Section - Actions */}
-        <div className="flex items-center gap-2">
-          {/* Search Button */}
-          <Button variant="ghost" size="icon" className="hidden sm:flex">
-            <Search className="w-5 h-5" />
-          </Button>
+                    <div className="hidden lg:block">
+                        <h2 className="text-sm font-semibold text-surface-900">
+                            {user?.role?.charAt(0).toUpperCase()}{user?.role?.slice(1)} Panel
+                        </h2>
+                    </div>
+                </div>
 
-          {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="w-5 h-5" />
-            {notificationCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error-500 rounded-full" />
-            )}
-          </Button>
-        </div>
-      </header>
+                {/* Right: Actions */}
+                <div className="flex items-center gap-2">
+                    {/* Notifications */}
+                    <button className="relative w-10 h-10 rounded-lg flex items-center justify-center text-surface-500 hover:bg-surface-100 transition-colors">
+                        <Bell className="w-5 h-5" />
+                        {notificationCount > 0 && (
+                            <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-error-500 text-white text-[10px] font-bold flex items-center justify-center">
+                                {notificationCount}
+                            </span>
+                        )}
+                    </button>
+
+                    {/* Profile */}
+                    <div className="flex items-center gap-3 ml-2 pl-3 border-l border-surface-200">
+                        <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-bold">
+                            {getInitials(user?.name || 'U')}
+                        </div>
+                        <div className="hidden sm:block text-right">
+                            <p className="text-sm font-medium text-surface-900 leading-tight">{user?.name}</p>
+                            <p className="text-xs text-surface-500 capitalize">{user?.role}</p>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={logout}>
+                            <LogOut className="w-4 h-4" />
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </header>
     );
-  }
-);
-
-Topbar.displayName = 'Topbar';
-
-export { Topbar };
+}

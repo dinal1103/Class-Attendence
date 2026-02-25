@@ -1,83 +1,81 @@
-/**
- * Auth Store (Zustand) — Manages user session state.
- * Stores user info (role, name, id) and tokens.
- * Persist is handled via localStorage directly.
- */
-import { create } from 'zustand'
-import api from '../api/axios'
+import { create } from 'zustand';
+import api from '@/api/axios';
 
-export type UserRole = 'STUDENT' | 'FACULTY' | 'ADMIN' | 'HOD'
+export type UserRole = 'student' | 'faculty' | 'admin' | 'hod';
 
-interface User {
-    id: string
-    name: string
-    email: string
-    role: UserRole
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+    tenant_id: string;
+    department_id: string;
+    isEnrolled: boolean;
 }
 
 interface AuthState {
-    user: User | null
-    isAuthenticated: boolean
-    isLoading: boolean
-    login: (email: string, password: string) => Promise<void>
-    logout: () => void
-    initialize: () => void
+    user: User | null;
+    token: string | null;
+    isLoading: boolean;
+    isAuthenticated: boolean;
+    login: (email: string, password: string, tenantCode: string) => Promise<void>;
+    register: (data: {
+        name: string;
+        email: string;
+        password: string;
+        role: string;
+        tenantCode: string;
+        departmentId: string;
+        enrollmentId?: string;
+    }) => Promise<void>;
+    logout: () => void;
+    initialize: () => void;
 }
 
 const useAuthStore = create<AuthState>((set) => ({
     user: null,
-    isAuthenticated: false,
+    token: null,
     isLoading: true,
+    isAuthenticated: false,
 
-    login: async (email: string, password: string) => {
-        const res = await api.post('/auth/login', { email, password })
-        const { accessToken, refreshToken, userId, role, fullName } = res.data.data
+    initialize: () => {
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        if (token && userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                set({ user, token, isAuthenticated: true, isLoading: false });
+            } catch {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                set({ isLoading: false });
+            }
+        } else {
+            set({ isLoading: false });
+        }
+    },
 
-        localStorage.setItem('accessToken', accessToken)
-        localStorage.setItem('refreshToken', refreshToken)
+    login: async (email, password, tenantCode) => {
+        const res = await api.post('/auth/login', { email, password, tenantCode });
+        const { token, user } = res.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        set({ user, token, isAuthenticated: true });
+    },
 
-        set({
-            user: {
-                id: userId,
-                name: fullName,
-                email, // Use passed email since backend doesn't return it in login response by default
-                role: role,
-            },
-            isAuthenticated: true,
-        })
+    register: async (data) => {
+        const res = await api.post('/auth/register', data);
+        const { token, user } = res.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        set({ user, token, isAuthenticated: true });
     },
 
     logout: () => {
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        set({ user: null, isAuthenticated: false })
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        set({ user: null, token: null, isAuthenticated: false });
     },
+}));
 
-    initialize: () => {
-        const token = localStorage.getItem('accessToken')
-        if (!token) {
-            set({ isLoading: false })
-            return
-        }
-
-        // Decode JWT payload to extract user info (no verification — backend validates)
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]))
-            set({
-                user: {
-                    id: payload.userId,
-                    name: payload.name || payload.email,
-                    email: payload.email,
-                    role: payload.role,
-                },
-                isAuthenticated: true,
-                isLoading: false,
-            })
-        } catch {
-            localStorage.removeItem('accessToken')
-            set({ isLoading: false })
-        }
-    },
-}))
-
-export default useAuthStore
+export default useAuthStore;

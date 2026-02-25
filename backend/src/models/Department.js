@@ -1,42 +1,29 @@
 const mongoose = require('mongoose');
 
-const departmentSchema = new mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: [true, 'Department name is required'],
-            trim: true,
-            maxlength: [100, 'Department name cannot exceed 100 characters'],
-        },
-        code: {
-            type: String,
-            required: [true, 'Department code is required'],
-            unique: true,
-            uppercase: true,
-            trim: true,
-            maxlength: [10, 'Department code cannot exceed 10 characters'],
-        },
-        hodId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-            default: null,
-            // Must reference a user with role = HOD
-        },
-        isActive: {
-            type: Boolean,
-            default: true,
-        },
+const departmentSchema = new mongoose.Schema({
+    tenant_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tenant',
+        required: true,
+        index: true
     },
-    {
-        timestamps: true,
+    name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    code: {
+        type: String,
+        required: true,
+        trim: true,
+        uppercase: true
+    },
+    isActive: {
+        type: Boolean,
+        default: true
     }
-);
+}, { timestamps: true });
 
-// -------------------------------------------------------
-// Indexes
-// -------------------------------------------------------
-departmentSchema.index({ hodId: 1 });
+departmentSchema.index({ tenant_id: 1, code: 1 }, { unique: true });
 
-const Department = mongoose.model('Department', departmentSchema);
-
-module.exports = Department;
+module.exports = mongoose.model('Department', departmentSchema);
