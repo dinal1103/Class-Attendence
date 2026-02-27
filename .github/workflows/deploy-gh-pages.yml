@@ -37,7 +37,7 @@ jobs:
         
       - name: Set Environment Variables
         working-directory: ./frontend
-        run: echo "VITE_API_URL=https://class-attendence-sand.vercel.app/api" > .env
+        run: echo "VITE_API_URL=http://100.102.89.91:5000/api" > .env
         
       - name: Build
         working-directory: ./frontend
