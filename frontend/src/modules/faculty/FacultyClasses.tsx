@@ -6,6 +6,7 @@ import { Button } from '@/components/primitives/Button';
 import { Input } from '@/components/primitives/Input';
 import { Card, CardContent } from '@/components/primitives/Card';
 import { EmptyState } from '@/components/composite/EmptyState';
+import { CircularProgress } from '@/components/primitives/CircularProgress';
 import api from '@/api/axios';
 import useAuthStore from '@/store/authStore';
 
@@ -19,25 +20,36 @@ interface ClassItem {
     schedule?: string;
 }
 
+interface ClassAttendance {
+    classId: string;
+    rate: number;
+}
+
 export default function FacultyClasses() {
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const [classes, setClasses] = useState<ClassItem[]>([]);
+    const [classAttendance, setClassAttendance] = useState<ClassAttendance[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [creating, setCreating] = useState(false);
     const [error, setError] = useState('');
     const [form, setForm] = useState({ name: '', code: '', schedule: '' });
 
-    const fetchClasses = () => {
+    const fetchData = () => {
         setLoading(true);
-        api.get('/classes')
-            .then(r => setClasses(r.data))
-            .catch(() => setClasses([]))
-            .finally(() => setLoading(false));
+        Promise.all([
+            api.get('/classes').then(r => setClasses(r.data)).catch(() => setClasses([])),
+            api.get('/stats/class-attendance').then(r => setClassAttendance(r.data)).catch(() => [])
+        ]).finally(() => setLoading(false));
     };
 
-    useEffect(() => { fetchClasses(); }, []);
+    useEffect(() => { fetchData(); }, []);
+
+    const getClassRate = (classId: string) => {
+        const found = classAttendance.find(ca => ca.classId === classId);
+        return found?.rate ?? 0;
+    };
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,7 +65,7 @@ export default function FacultyClasses() {
             });
             setShowModal(false);
             setForm({ name: '', code: '', schedule: '' });
-            fetchClasses();
+            fetchData();
         } catch (err: any) {
             setError(err.response?.data?.error || 'Failed to create class.');
         } finally {
@@ -73,22 +85,27 @@ export default function FacultyClasses() {
             ) : classes.length === 0 ? (
                 <EmptyState icon="clipboard" title="No classes" description="Click 'Add Class' to create your first class." />
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                     {classes.map(cls => (
-                        <Card key={cls._id} className="cursor-pointer hover:shadow-md transition-shadow"
+                        <Card key={cls._id} className="cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
                             onClick={() => navigate(`/faculty/classes/${cls._id}`)}>
                             <CardContent className="p-5">
-                                <div className="flex items-start gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
-                                        <BookOpen className="w-5 h-5 text-primary-600" />
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="w-9 h-9 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+                                                <BookOpen className="w-4 h-4 text-primary-600" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-surface-900 truncate">{cls.name}</p>
+                                                <p className="text-xs text-surface-500">Code: {cls.code}</p>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-surface-400">{cls.department_id?.name || ''}</p>
+                                        {cls.schedule && <p className="text-xs text-surface-400 mt-0.5">{cls.schedule}</p>}
+                                        <p className="text-xs text-primary-600 font-medium mt-1">{cls.students?.length || 0} students</p>
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-semibold text-surface-900 truncate">{cls.name}</p>
-                                        <p className="text-xs text-surface-500 mt-0.5">Code: {cls.code}</p>
-                                        <p className="text-xs text-surface-400 mt-0.5">{cls.department_id?.name || ''}</p>
-                                        {cls.schedule && <p className="text-xs text-surface-400 mt-1">{cls.schedule}</p>}
-                                        <p className="text-xs text-primary-600 font-medium mt-2">{cls.students?.length || 0} students</p>
-                                    </div>
+                                    <CircularProgress value={getClassRate(cls._id)} size={44} strokeWidth={4} />
                                 </div>
                             </CardContent>
                         </Card>

@@ -75,3 +75,149 @@ exports.studentStats = async (req, res, next) => {
         next(err);
     }
 };
+
+/**
+ * GET /api/stats/class-attendance
+ * Returns per-class attendance percentages.
+ * Works for student, faculty, and hod roles.
+ */
+exports.classAttendance = async (req, res, next) => {
+    try {
+        const mongoose = require('mongoose');
+        const tid = req.tenantId;
+        const uid = req.user.user_id;
+        const role = req.user.role;
+
+        // Find relevant classes based on role
+        const classFilter = { tenant_id: tid, isActive: true };
+        if (role === 'faculty') classFilter.faculty_id = uid;
+        if (role === 'student') classFilter.students = uid;
+        if (role === 'hod') {
+            const user = await User.findById(uid).lean();
+            if (user?.department_id) classFilter.department_id = user.department_id;
+        }
+
+        const classes = await Class.find(classFilter).lean();
+
+        const results = await Promise.all(classes.map(async (cls) => {
+            // Get all sessions for this class
+            const sessions = await AttendanceSession.find({
+                tenant_id: tid,
+                class_id: cls._id,
+                status: 'completed'
+            }).select('_id').lean();
+
+            const sessionIds = sessions.map(s => s._id);
+
+            let totalRecords = 0, presentCount = 0;
+
+            if (sessionIds.length > 0) {
+                if (role === 'student') {
+                    // Student: count only their own records
+                    totalRecords = await AttendanceRecord.countDocuments({
+                        session_id: { $in: sessionIds },
+                        student_id: uid
+                    });
+                    presentCount = await AttendanceRecord.countDocuments({
+                        session_id: { $in: sessionIds },
+                        student_id: uid,
+                        status: 'present'
+                    });
+                } else {
+                    // Faculty/HOD: count all records across sessions
+                    totalRecords = await AttendanceRecord.countDocuments({
+                        session_id: { $in: sessionIds }
+                    });
+                    presentCount = await AttendanceRecord.countDocuments({
+                        session_id: { $in: sessionIds },
+                        status: 'present'
+                    });
+                }
+            }
+
+            const rate = totalRecords > 0 ? Math.round((presentCount / totalRecords) * 100) : 0;
+
+            return {
+                classId: cls._id,
+                className: cls.name,
+                classCode: cls.code,
+                totalSessions: sessionIds.length,
+                totalRecords,
+                presentCount,
+                rate
+            };
+        }));
+
+        res.json(results);
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * GET /api/stats/hod/weekly
+ * Returns 7-day department attendance breakdown for HOD bar chart.
+ */
+exports.hodWeekly = async (req, res, next) => {
+    try {
+        const mongoose = require('mongoose');
+        const tid = req.tenantId;
+        const uid = req.user.user_id;
+
+        const user = await User.findById(uid).lean();
+        const deptId = user?.department_id;
+
+        // Get all classes in the HOD's department
+        const classIds = await Class.find({
+            tenant_id: tid,
+            department_id: deptId,
+            isActive: true
+        }).distinct('_id');
+
+        // Build last 7 days
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setHours(0, 0, 0, 0);
+            d.setDate(d.getDate() - i);
+            days.push(d);
+        }
+
+        const results = await Promise.all(days.map(async (dayStart) => {
+            const dayEnd = new Date(dayStart);
+            dayEnd.setHours(23, 59, 59, 999);
+
+            // Find sessions for that day in department classes
+            const sessionIds = await AttendanceSession.find({
+                tenant_id: tid,
+                class_id: { $in: classIds },
+                createdAt: { $gte: dayStart, $lte: dayEnd },
+                status: 'completed'
+            }).distinct('_id');
+
+            let present = 0, absent = 0;
+            if (sessionIds.length > 0) {
+                present = await AttendanceRecord.countDocuments({
+                    session_id: { $in: sessionIds },
+                    status: 'present'
+                });
+                absent = await AttendanceRecord.countDocuments({
+                    session_id: { $in: sessionIds },
+                    status: 'absent'
+                });
+            }
+
+            return {
+                date: dayStart.toISOString().split('T')[0],
+                day: dayStart.toLocaleDateString('en-US', { weekday: 'short' }),
+                present,
+                absent,
+                total: present + absent
+            };
+        }));
+
+        res.json(results);
+    } catch (err) {
+        next(err);
+    }
+};

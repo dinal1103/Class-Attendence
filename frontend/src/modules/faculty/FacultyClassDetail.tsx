@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, BookOpen, Users, ArrowLeft, CheckCircle, XCircle, Clock, CalendarCheck } from 'lucide-react';
+import { Loader2, BookOpen, Users, ArrowLeft, CheckCircle, XCircle, Clock, CalendarCheck, Upload, Camera } from 'lucide-react';
 import { Button } from '@/components/primitives/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/primitives/Card';
 import { EmptyState } from '@/components/composite/EmptyState';
@@ -43,12 +43,50 @@ export default function FacultyClassDetail() {
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+    // Upload state
+    const fileRef = useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadMessage, setUploadMessage] = useState('');
+
+    const fetchData = () => {
         Promise.all([
             api.get(`/classes/${id}`).then(r => setCls(r.data)),
             api.get(`/attendance/sessions?classId=${id}`).then(r => setSessions(r.data))
         ]).catch(() => { }).finally(() => setLoading(false));
-    }, [id]);
+    };
+
+    useEffect(() => { fetchData(); }, [id]);
+
+    const handleUpload = async () => {
+        const files = fileRef.current?.files;
+        if (!files || files.length === 0) {
+            setUploadMessage('Please select at least one photo.');
+            return;
+        }
+
+        setUploading(true);
+        setUploadMessage('');
+        const formData = new FormData();
+        formData.append('classId', id!);
+        for (let i = 0; i < files.length; i++) {
+            formData.append('images', files[i]);
+        }
+
+        try {
+            const res = await api.post('/attendance/sessions', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setUploadMessage(res.data.message || 'Session created successfully!');
+            if (fileRef.current) fileRef.current.value = '';
+            // Refresh sessions
+            const sessRes = await api.get(`/attendance/sessions?classId=${id}`);
+            setSessions(sessRes.data);
+        } catch (err: any) {
+            setUploadMessage(err.response?.data?.error || 'Failed to create session.');
+        } finally {
+            setUploading(false);
+        }
+    };
 
     if (loading) {
         return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary-500" /></div>;
@@ -102,6 +140,32 @@ export default function FacultyClassDetail() {
                 )}
             </div>
 
+            {/* Upload Attendance Image — Prominent Action */}
+            <Card className="border-2 border-dashed border-primary-200 bg-primary-50/30">
+                <CardContent className="p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0">
+                            <Camera className="w-6 h-6 text-primary-600" />
+                        </div>
+                        <div className="flex-1 space-y-2">
+                            <h3 className="text-sm font-bold text-surface-900">Start Attendance Session</h3>
+                            <p className="text-xs text-surface-500">Upload classroom photos to automatically mark attendance via face recognition.</p>
+                            <input type="file" ref={fileRef} accept="image/*" multiple
+                                className="block w-full text-sm text-surface-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
+                        </div>
+                        <Button onClick={handleUpload} disabled={uploading}
+                            leftIcon={uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}>
+                            {uploading ? 'Uploading…' : 'Upload & Start'}
+                        </Button>
+                    </div>
+                    {uploadMessage && (
+                        <div className={`mt-3 p-3 rounded-lg text-sm font-medium ${uploadMessage.includes('success') || uploadMessage.includes('created') ? 'bg-green-50 text-green-700' : 'bg-error-50 text-error-700'}`}>
+                            {uploadMessage}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
             {/* Enrolled Students */}
             <Card>
                 <CardHeader><CardTitle>Enrolled Students ({cls.students?.length || 0})</CardTitle></CardHeader>
@@ -131,7 +195,7 @@ export default function FacultyClassDetail() {
                 <CardHeader><CardTitle>Attendance Sessions</CardTitle></CardHeader>
                 <CardContent>
                     {sessions.length === 0 ? (
-                        <EmptyState icon="calendar" title="No sessions" description="Start an attendance session from the Attendance page." compact />
+                        <EmptyState icon="calendar" title="No sessions" description="Upload classroom photos above to start a session." compact />
                     ) : (
                         <div className="space-y-2">
                             {sessions.map(s => (
@@ -166,8 +230,8 @@ function SessionRow({ session }: { session: Session }) {
             <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-surface-50 transition-colors" onClick={toggle}>
                 <p className="text-sm font-medium text-surface-900">{new Date(session.createdAt).toLocaleString()}</p>
                 <span className={`text-xs font-medium px-2 py-1 rounded-full ${session.status === 'completed' ? 'bg-green-50 text-green-700' :
-                        session.status === 'pending' ? 'bg-yellow-50 text-yellow-700' :
-                            'bg-surface-100 text-surface-600'
+                    session.status === 'pending' ? 'bg-yellow-50 text-yellow-700' :
+                        'bg-surface-100 text-surface-600'
                     }`}>{session.status}</span>
             </div>
             {expanded && (
