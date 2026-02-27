@@ -19,12 +19,14 @@ import StudentClasses from '@/modules/student/StudentClasses';
 import StudentAttendance from '@/modules/student/StudentAttendance';
 import StudentFaceEnroll from '@/modules/student/StudentFaceEnroll';
 import StudentDisputes from '@/modules/student/StudentDisputes';
+import StudentClassDetail from '@/modules/student/StudentClassDetail';
 
 // Faculty
 import FacultyDashboard from '@/modules/faculty/FacultyDashboard';
 import FacultyClasses from '@/modules/faculty/FacultyClasses';
 import FacultyAttendance from '@/modules/faculty/FacultyAttendance';
 import FacultyDisputes from '@/modules/faculty/FacultyDisputes';
+import FacultyClassDetail from '@/modules/faculty/FacultyClassDetail';
 
 // Admin
 import AdminDashboard from '@/modules/admin/AdminDashboard';
@@ -57,6 +59,7 @@ export default function App() {
                 <Route element={<AppLayout />}>
                     <Route path="/student" element={<StudentDashboard />} />
                     <Route path="/student/classes" element={<StudentClasses />} />
+                    <Route path="/student/classes/:id" element={<StudentClassDetail />} />
                     <Route path="/student/attendance" element={<StudentAttendance />} />
                     <Route path="/student/face-enroll" element={<StudentFaceEnroll />} />
                     <Route path="/student/disputes" element={<StudentDisputes />} />
@@ -68,6 +71,7 @@ export default function App() {
                 <Route element={<AppLayout />}>
                     <Route path="/faculty" element={<FacultyDashboard />} />
                     <Route path="/faculty/classes" element={<FacultyClasses />} />
+                    <Route path="/faculty/classes/:id" element={<FacultyClassDetail />} />
                     <Route path="/faculty/attendance" element={<FacultyAttendance />} />
                     <Route path="/faculty/disputes" element={<FacultyDisputes />} />
                 </Route>

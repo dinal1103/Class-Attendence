@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, CheckCircle, XCircle, TrendingUp, Camera, Calendar, AlertCircle } from 'lucide-react';
+import { BookOpen, CheckCircle, XCircle, Camera, Loader2 } from 'lucide-react';
 import { StatCard } from '@/components/composite/StatCard';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/primitives/Card';
 import { Button } from '@/components/primitives/Button';
@@ -9,10 +10,37 @@ import { CircularProgress } from '@/components/primitives/CircularProgress';
 import useAuthStore from '@/store/authStore';
 import { listVariants } from '@/lib/animations';
 import { ROUTES } from '@/lib/constants';
+import api from '@/api/axios';
+
+interface StudentStats {
+    totalLectures: number;
+    present: number;
+    absent: number;
+    rate: number;
+}
+
+interface ClassItem {
+    _id: string;
+    name: string;
+    code: string;
+    faculty_id?: { name: string };
+    department_id?: { name: string; code: string };
+    students: string[];
+}
 
 export default function StudentDashboard() {
     const navigate = useNavigate();
     const { user } = useAuthStore();
+    const [stats, setStats] = useState<StudentStats | null>(null);
+    const [classes, setClasses] = useState<ClassItem[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        Promise.all([
+            api.get('/stats/student').then(r => setStats(r.data)).catch(() => null),
+            api.get('/classes').then(r => setClasses(r.data)).catch(() => [])
+        ]).finally(() => setLoading(false));
+    }, []);
 
     return (
         <div className="space-y-6 sm:space-y-8">
@@ -24,26 +52,24 @@ export default function StudentDashboard() {
                     </h1>
                     <p className="text-surface-500 text-sm mt-1">Here's your attendance overview</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="secondary" size="sm" leftIcon={<Calendar className="w-4 h-4" />}
-                        onClick={() => navigate(ROUTES.STUDENT.ATTENDANCE)}>Attendance</Button>
-                    <Button size="sm" leftIcon={<Camera className="w-4 h-4" />}
-                        onClick={() => navigate(ROUTES.STUDENT.FACE_ENROLL)}>Face Enroll</Button>
-                </div>
+                <Button size="sm" leftIcon={<Camera className="w-4 h-4" />}
+                    onClick={() => navigate(ROUTES.STUDENT.FACE_ENROLL)}>Face Enroll</Button>
             </div>
 
-            {/* Main Grid Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-                {/* Left Column (Span 2): Stats & Main Feed */}
-                <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+            {loading ? (
+                <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                </div>
+            ) : (
+                <>
                     {/* Stats Grid */}
                     <motion.div variants={listVariants} initial="initial" animate="animate"
-                        className="grid grid-cols-2 gap-3 sm:gap-4">
-                        <StatCard title="Total Lectures" value={0} icon={<BookOpen className="w-6 h-6" />}
+                        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <StatCard title="Total Lectures" value={stats?.totalLectures ?? 0} icon={<BookOpen className="w-6 h-6" />}
                             iconBgColor="#EFF6FF" iconColor="#2563EB" />
-                        <StatCard title="Present" value={0} icon={<CheckCircle className="w-6 h-6" />}
+                        <StatCard title="Present" value={stats?.present ?? 0} icon={<CheckCircle className="w-6 h-6" />}
                             iconBgColor="#ECFDF5" iconColor="#10B981" />
-                        <StatCard title="Absent" value={0} icon={<XCircle className="w-6 h-6" />}
+                        <StatCard title="Absent" value={stats?.absent ?? 0} icon={<XCircle className="w-6 h-6" />}
                             iconBgColor="#FEF2F2" iconColor="#EF4444" />
 
                         {/* Attendance Rate with Circular Progress */}
@@ -52,35 +78,40 @@ export default function StudentDashboard() {
                                 <p className="text-sm font-medium text-surface-500">Rate</p>
                                 <p className="text-xs text-surface-400 mt-2">min 75% required</p>
                             </div>
-                            <CircularProgress value={0} size={56} strokeWidth={5} />
+                            <CircularProgress value={stats?.rate ?? 0} size={56} strokeWidth={5} />
                         </motion.div>
                     </motion.div>
 
-                    {/* Recent Attendance */}
+                    {/* Enrolled Classes */}
                     <Card>
-                        <CardHeader><CardTitle>Recent Attendance</CardTitle></CardHeader>
+                        <CardHeader><CardTitle>My Classes</CardTitle></CardHeader>
                         <CardContent>
-                            <EmptyState icon="calendar" title="No records yet" description="Your attendance history will appear here once classes begin." compact />
+                            {classes.length === 0 ? (
+                                <EmptyState icon="clipboard" title="No classes yet" description="Join a class from the Classes page to get started." compact />
+                            ) : (
+                                <div className="divide-y divide-surface-100">
+                                    {classes.map(cls => (
+                                        <div key={cls._id}
+                                            className="flex items-center justify-between py-3 px-2 hover:bg-surface-50 rounded-lg cursor-pointer transition-colors"
+                                            onClick={() => navigate(`/student/classes/${cls._id}`)}>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center">
+                                                    <BookOpen className="w-5 h-5 text-primary-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-surface-900">{cls.name}</p>
+                                                    <p className="text-xs text-surface-500">Code: {cls.code} · {cls.faculty_id?.name || 'TBD'}</p>
+                                                </div>
+                                            </div>
+                                            <span className="text-xs text-primary-600 font-medium">View →</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
-                </div>
-
-                {/* Right Column (Span 1): Quick Actions / Sidebar Widgets */}
-                <div className="space-y-6 sm:space-y-8">
-                    {/* Quick Actions */}
-                    <Card>
-                        <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
-                        <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
-                            <Button variant="secondary" className="w-full justify-start h-12" leftIcon={<BookOpen className="w-4 h-4" />}
-                                onClick={() => navigate(ROUTES.STUDENT.CLASSES)}>Browse Classes</Button>
-                            <Button variant="secondary" className="w-full justify-start h-12" leftIcon={<Camera className="w-4 h-4" />}
-                                onClick={() => navigate(ROUTES.STUDENT.FACE_ENROLL)}>Update Face Photos</Button>
-                            <Button variant="secondary" className="w-full justify-start h-12" leftIcon={<AlertCircle className="w-4 h-4 text-error-500" />}
-                                onClick={() => navigate(ROUTES.STUDENT.DISPUTES)}>Raise a Dispute</Button>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+                </>
+            )}
         </div>
     );
 }

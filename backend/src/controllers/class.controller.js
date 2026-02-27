@@ -37,6 +37,10 @@ exports.list = async (req, res, next) => {
         if (req.user.role === 'faculty') {
             filter.faculty_id = req.user.user_id;
         }
+        // Student sees only classes they are enrolled in
+        if (req.user.role === 'student') {
+            filter.students = req.user.user_id;
+        }
         const classes = await Class.find(filter)
             .populate('faculty_id', 'name email')
             .populate('department_id', 'name code');
@@ -92,6 +96,44 @@ exports.addStudents = async (req, res, next) => {
         );
         if (!cls) return res.status(404).json({ error: 'Class not found.' });
         res.json(cls);
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * POST /api/classes/join
+ * Body: { code: 'CLASS_CODE' }
+ * Student joins a class by its code.
+ */
+exports.joinByCode = async (req, res, next) => {
+    try {
+        const { code } = req.body;
+        if (!code) return res.status(400).json({ error: 'Class code is required.' });
+
+        const cls = await Class.findOneAndUpdate(
+            { tenant_id: req.tenantId, code: code.toUpperCase(), isActive: true },
+            { $addToSet: { students: req.user.user_id } },
+            { new: true }
+        ).populate('faculty_id', 'name email').populate('department_id', 'name code');
+
+        if (!cls) return res.status(404).json({ error: 'Class not found with that code.' });
+        res.json(cls);
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * GET /api/classes/available
+ * Returns all active classes in the tenant (for browsing, not filtered by enrollment).
+ */
+exports.listAll = async (req, res, next) => {
+    try {
+        const classes = await Class.find({ tenant_id: req.tenantId, isActive: true })
+            .populate('faculty_id', 'name email')
+            .populate('department_id', 'name code');
+        res.json(classes);
     } catch (err) {
         next(err);
     }

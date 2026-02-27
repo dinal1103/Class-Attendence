@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config');
 const User = require('../models/User');
 const Tenant = require('../models/Tenant');
+const Department = require('../models/Department');
 
 /**
  * POST /api/auth/register
@@ -26,9 +27,20 @@ exports.register = async (req, res, next) => {
             return res.status(409).json({ error: 'User already exists in this tenant.' });
         }
 
+        // Resolve Department ID from Code (e.g., 'CE' -> ObjectId)
+        // If departmentId is already a valid ObjectId, this will still work
+        let finalDepartmentId = departmentId;
+        if (departmentId && !departmentId.match(/^[0-9a-fA-F]{24}$/)) {
+            const dept = await Department.findOne({ tenant_id: tenant._id, code: departmentId.toUpperCase() });
+            if (!dept) {
+                return res.status(400).json({ error: 'Invalid department code.' });
+            }
+            finalDepartmentId = dept._id;
+        }
+
         const user = await User.create({
             tenant_id: tenant._id,
-            department_id: departmentId,
+            department_id: finalDepartmentId,
             name,
             email,
             password,

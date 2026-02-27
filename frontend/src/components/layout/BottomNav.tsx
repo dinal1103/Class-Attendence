@@ -52,6 +52,7 @@ export function BottomNav() {
                     <NavLink
                         key={tab.path}
                         to={tab.path}
+                        end={tab.label === 'Home'}
                         className={({ isActive }) =>
                             cn(
                                 'flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-[10px] font-medium transition-colors',

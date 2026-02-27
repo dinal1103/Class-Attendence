@@ -4,8 +4,8 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Setting base to the GitHub repository name for GH Pages to resolve assets
-  base: '/Class-Attendence/',
+  // Setting base to the root directory for Vercel pointing
+  base: '/',
   plugins: [react()],
   resolve: {
     alias: {

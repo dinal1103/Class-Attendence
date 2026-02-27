@@ -17,6 +17,7 @@ const classRoutes = require('./routes/class.routes');
 const enrollmentRoutes = require('./routes/enrollment.routes');
 const attendanceRoutes = require('./routes/attendance.routes');
 const disputeRoutes = require('./routes/dispute.routes');
+const statsRoutes = require('./routes/stats.routes');
 
 const rateLimit = require('express-rate-limit');
 
@@ -30,11 +31,11 @@ app.use(helmet());
 // Restrict CORS array to your deployed frontend URLs
 const allowedOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',')
-    : ['http://localhost:3000', 'https://ronak-javiya.github.io', 'https://class-attendence-sand.vercel.app', "*"];
+    : ['http://localhost:3000', 'https://ronak-javiya.github.io', 'https://class-attendence-sand.vercel.app', '*'];
 
 app.use(cors({
     origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
@@ -92,6 +93,7 @@ app.use('/api/classes', classRoutes);
 app.use('/api/enrollment', enrollmentRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/disputes', disputeRoutes);
+app.use('/api/stats', statsRoutes);
 
 // --------------------------------------------------
 // Error Handler (must be last)

@@ -35,7 +35,7 @@ services:
       - "5000:5000"
     environment:
       - PORT=5000
-      - MONGODB_URI=mongodb://mongodb:27017/smartattendance
+      - MONGODB_URI=mongodb://mongodb:27017/smart-attendance
       - JWT_SECRET=${JWT_SECRET:-supersecretjwtkey_please_change_this_for_prod}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-01234567890123456789012345678901}
       - AI_SERVICE_URL=http://ai-face-service:8000/embedding/classroom
@@ -59,7 +59,7 @@ services:
     container_name: smart-attendance-worker
     environment:
       - PORT=5000
-      - MONGODB_URI=mongodb://mongodb:27017/smartattendance
+      - MONGODB_URI=mongodb://mongodb:27017/smart-attendance
       - JWT_SECRET=${JWT_SECRET:-supersecretjwtkey_please_change_this_for_prod}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-01234567890123456789012345678901}
       - AI_SERVICE_URL=http://ai-face-service:8000/embedding/classroom

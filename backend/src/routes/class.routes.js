@@ -7,6 +7,8 @@ const authorize = require('../middlewares/role');
 router.use(authMiddleware, tenantScope);
 
 router.post('/', authorize('admin', 'faculty'), ctrl.create);
+router.get('/available', ctrl.listAll);
+router.post('/join', authorize('student'), ctrl.joinByCode);
 router.get('/', ctrl.list);
 router.get('/:id', ctrl.getById);
 router.put('/:id', authorize('admin', 'faculty'), ctrl.update);
