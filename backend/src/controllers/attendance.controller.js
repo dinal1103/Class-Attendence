@@ -11,10 +11,22 @@ const storage = require('../services/storage');
 
 const fs = require('fs');
 
-// BullMQ queue
-const attendanceQueue = new Queue('attendance', {
-    connection: { host: config.redis.host, port: config.redis.port }
-});
+// BullMQ queue lazy initialization for Serverless compatibility
+let attendanceQueue = null;
+function getQueue() {
+    if (!attendanceQueue) {
+        attendanceQueue = new Queue('attendance', {
+            connection: {
+                host: config.redis.host,
+                port: config.redis.port,
+                // Don't crash immediately if Redis is unreachable during boot
+                enableOfflineQueue: false,
+                maxRetriesPerRequest: null
+            }
+        });
+    }
+    return attendanceQueue;
+}
 
 // Multer — save directly to OS disk to prevent RAM max out
 const upload = multer({
@@ -81,7 +93,7 @@ exports.createSession = async (req, res, next) => {
         await session.save();
 
         // Dispatch to BullMQ
-        await attendanceQueue.add('processAttendance', {
+        await getQueue().add('processAttendance', {
             sessionId: session._id.toString(),
             tenantId: req.tenantId,
             classId
