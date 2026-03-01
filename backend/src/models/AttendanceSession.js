@@ -42,6 +42,10 @@ const attendanceSessionSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    sessionDate: {
+        type: Date,
+        default: Date.now
+    },
     processedAt: {
         type: Date,
         default: null

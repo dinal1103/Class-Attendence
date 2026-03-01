@@ -11,5 +11,6 @@ router.get('/faculty', authorize('faculty'), ctrl.facultyStats);
 router.get('/student', authorize('student'), ctrl.studentStats);
 router.get('/class-attendance', ctrl.classAttendance);
 router.get('/hod/weekly', authorize('hod'), ctrl.hodWeekly);
+router.get('/admin/report', authorize('admin'), ctrl.adminReport);
 
 module.exports = router;

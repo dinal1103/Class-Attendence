@@ -9,11 +9,34 @@ const Class = require('../models/Class');
 exports.create = async (req, res, next) => {
     try {
         const { name, code, departmentId, facultyId, students, schedule } = req.body;
+
+        // Auto-generate a unique 6-char alphanumeric code if none provided
+        let classCode = code;
+        if (!classCode) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let attempts = 0;
+            while (attempts < 10) {
+                let generated = '';
+                for (let i = 0; i < 6; i++) {
+                    generated += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                const exists = await Class.findOne({ tenant_id: req.tenantId, code: generated });
+                if (!exists) {
+                    classCode = generated;
+                    break;
+                }
+                attempts++;
+            }
+            if (!classCode) {
+                return res.status(500).json({ error: 'Could not generate a unique class code. Please try again.' });
+            }
+        }
+
         const cls = await Class.create({
             tenant_id: req.tenantId,
             department_id: departmentId,
             name,
-            code,
+            code: classCode,
             faculty_id: facultyId,
             students: students || [],
             schedule: schedule || ''

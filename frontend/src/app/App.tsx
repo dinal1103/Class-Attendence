@@ -42,10 +42,20 @@ import HodOverrides from '@/modules/hod/HodOverrides';
 
 export default function App() {
     const initialize = useAuthStore((s) => s.initialize);
+    const isLoading = useAuthStore((s) => s.isLoading);
 
     useEffect(() => {
         initialize();
     }, [initialize]);
+
+    // Wait for auth state to be restored from localStorage before rendering routes
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-surface-50">
+                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <Routes>

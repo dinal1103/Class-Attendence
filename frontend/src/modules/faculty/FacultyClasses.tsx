@@ -34,7 +34,7 @@ export default function FacultyClasses() {
     const [showModal, setShowModal] = useState(false);
     const [creating, setCreating] = useState(false);
     const [error, setError] = useState('');
-    const [form, setForm] = useState({ name: '', code: '', schedule: '' });
+    const [form, setForm] = useState({ name: '' });
 
     const fetchData = () => {
         setLoading(true);
@@ -58,13 +58,11 @@ export default function FacultyClasses() {
         try {
             await api.post('/classes', {
                 name: form.name,
-                code: form.code,
                 departmentId: user?.department_id,
                 facultyId: user?.id,
-                schedule: form.schedule
             });
             setShowModal(false);
-            setForm({ name: '', code: '', schedule: '' });
+            setForm({ name: '' });
             fetchData();
         } catch (err: any) {
             setError(err.response?.data?.error || 'Failed to create class.');
@@ -125,10 +123,7 @@ export default function FacultyClasses() {
                         <form onSubmit={handleCreate} className="space-y-4">
                             <Input label="Class Name" placeholder="e.g. Data Structures" value={form.name}
                                 onChange={e => setForm({ ...form, name: e.target.value })} required />
-                            <Input label="Class Code" placeholder="e.g. CS201" value={form.code}
-                                onChange={e => setForm({ ...form, code: e.target.value })} required />
-                            <Input label="Schedule (optional)" placeholder="e.g. Mon/Wed 10:00 AM" value={form.schedule}
-                                onChange={e => setForm({ ...form, schedule: e.target.value })} />
+                            <p className="text-xs text-surface-400">A unique class code will be automatically generated.</p>
                             {error && <div className="p-3 rounded-lg bg-error-50 text-error-700 text-sm font-medium">{error}</div>}
                             <Button type="submit" className="w-full" disabled={creating}>
                                 {creating ? 'Creating...' : 'Create Class'}

@@ -59,7 +59,7 @@ exports.uploadMiddleware = upload;
  */
 exports.createSession = async (req, res, next) => {
     try {
-        const { classId } = req.body;
+        const { classId, sessionDate } = req.body;
 
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ error: 'At least one classroom photo is required.' });
@@ -70,7 +70,8 @@ exports.createSession = async (req, res, next) => {
             tenant_id: req.tenantId,
             class_id: classId,
             faculty_id: req.user.user_id,
-            status: 'pending'
+            status: 'pending',
+            sessionDate: sessionDate ? new Date(sessionDate) : new Date()
         });
 
         // Disk setup for BullMQ

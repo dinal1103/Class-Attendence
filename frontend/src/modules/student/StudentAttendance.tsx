@@ -36,7 +36,9 @@ export default function StudentAttendance() {
         const fetchData = async () => {
             try {
                 const sessRes = await api.get('/attendance/sessions');
-                const sessions: Session[] = sessRes.data;
+                const sessions: Session[] = (sessRes.data as Session[]).filter(
+                    (s) => s.status === 'completed'
+                );
 
                 // Fetch records for all sessions in parallel
                 const allRows: AttendanceRow[] = [];

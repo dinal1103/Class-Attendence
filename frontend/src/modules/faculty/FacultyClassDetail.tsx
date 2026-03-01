@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, BookOpen, Users, ArrowLeft, CheckCircle, XCircle, Clock, CalendarCheck, Upload, Camera } from 'lucide-react';
+import { Loader2, BookOpen, Users, ArrowLeft, CheckCircle, XCircle, Clock, CalendarCheck, Upload, Camera, Copy, X, Plus } from 'lucide-react';
 import { Button } from '@/components/primitives/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/primitives/Card';
 import { EmptyState } from '@/components/composite/EmptyState';
@@ -42,11 +42,18 @@ export default function FacultyClassDetail() {
     const [cls, setCls] = useState<ClassDetail | null>(null);
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
+    const [codeCopied, setCodeCopied] = useState(false);
 
-    // Upload state
+    // Attendance modal state
+    const [showAttendanceModal, setShowAttendanceModal] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
     const [uploadMessage, setUploadMessage] = useState('');
+    const [sessionDate, setSessionDate] = useState(() => new Date().toISOString().split('T')[0]);
+    const [sessionTime, setSessionTime] = useState(() => {
+        const now = new Date();
+        return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    });
 
     const fetchData = () => {
         Promise.all([
@@ -56,6 +63,14 @@ export default function FacultyClassDetail() {
     };
 
     useEffect(() => { fetchData(); }, [id]);
+
+    const copyCode = () => {
+        if (cls?.code) {
+            navigator.clipboard.writeText(cls.code);
+            setCodeCopied(true);
+            setTimeout(() => setCodeCopied(false), 2000);
+        }
+    };
 
     const handleUpload = async () => {
         const files = fileRef.current?.files;
@@ -68,6 +83,7 @@ export default function FacultyClassDetail() {
         setUploadMessage('');
         const formData = new FormData();
         formData.append('classId', id!);
+        formData.append('sessionDate', `${sessionDate}T${sessionTime}:00`);
         for (let i = 0; i < files.length; i++) {
             formData.append('images', files[i]);
         }
@@ -78,9 +94,9 @@ export default function FacultyClassDetail() {
             });
             setUploadMessage(res.data.message || 'Session created successfully!');
             if (fileRef.current) fileRef.current.value = '';
-            // Refresh sessions
             const sessRes = await api.get(`/attendance/sessions?classId=${id}`);
             setSessions(sessRes.data);
+            setTimeout(() => { setShowAttendanceModal(false); setUploadMessage(''); }, 1500);
         } catch (err: any) {
             setUploadMessage(err.response?.data?.error || 'Failed to create session.');
         } finally {
@@ -101,16 +117,33 @@ export default function FacultyClassDetail() {
             {/* Header */}
             <div className="flex items-center gap-3">
                 <Button variant="secondary" size="sm" onClick={() => navigate(-1)} leftIcon={<ArrowLeft className="w-4 h-4" />}>Back</Button>
-                <div>
+                <div className="flex-1">
                     <h1 className="text-xl font-bold text-surface-900">{cls.name}</h1>
-                    <p className="text-sm text-surface-500">Code: {cls.code} · {cls.department_id?.name || ''}</p>
+                    <p className="text-sm text-surface-500">{cls.department_id?.name || ''}</p>
                 </div>
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {/* Class Code — Prominent Share Section */}
+            <Card className="bg-gradient-to-r from-primary-50 to-primary-100/50 border-primary-200">
+                <CardContent className="p-5">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div>
+                            <p className="text-xs font-medium text-primary-600 uppercase tracking-wider mb-1">Class Code</p>
+                            <p className="text-3xl font-bold text-primary-800 tracking-widest font-mono">{cls.code}</p>
+                            <p className="text-xs text-primary-500 mt-1">Share this code with students to let them join</p>
+                        </div>
+                        <Button variant="secondary" size="sm" onClick={copyCode}
+                            leftIcon={codeCopied ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}>
+                            {codeCopied ? 'Copied!' : 'Copy Code'}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Quick Stats + Add Attendance Button */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <Card>
-                    <CardContent className="p-5 flex items-center gap-3">
+                    <CardContent className="p-4 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center"><Users className="w-5 h-5 text-primary-600" /></div>
                         <div>
                             <p className="text-xs text-surface-500">Students</p>
@@ -119,7 +152,7 @@ export default function FacultyClassDetail() {
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardContent className="p-5 flex items-center gap-3">
+                    <CardContent className="p-4 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center"><CalendarCheck className="w-5 h-5 text-green-600" /></div>
                         <div>
                             <p className="text-xs text-surface-500">Sessions</p>
@@ -129,7 +162,7 @@ export default function FacultyClassDetail() {
                 </Card>
                 {cls.schedule && (
                     <Card>
-                        <CardContent className="p-5 flex items-center gap-3">
+                        <CardContent className="p-4 flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-yellow-50 flex items-center justify-center"><Clock className="w-5 h-5 text-yellow-600" /></div>
                             <div>
                                 <p className="text-xs text-surface-500">Schedule</p>
@@ -138,33 +171,15 @@ export default function FacultyClassDetail() {
                         </CardContent>
                     </Card>
                 )}
+                {/* Add Attendance Button Card */}
+                <Card className="cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 border-2 border-dashed border-primary-300 bg-primary-50/30"
+                    onClick={() => setShowAttendanceModal(true)}>
+                    <CardContent className="p-4 flex flex-col items-center justify-center gap-2 h-full">
+                        <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center"><Plus className="w-5 h-5 text-primary-600" /></div>
+                        <p className="text-xs font-semibold text-primary-700">Add Attendance</p>
+                    </CardContent>
+                </Card>
             </div>
-
-            {/* Upload Attendance Image — Prominent Action */}
-            <Card className="border-2 border-dashed border-primary-200 bg-primary-50/30">
-                <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0">
-                            <Camera className="w-6 h-6 text-primary-600" />
-                        </div>
-                        <div className="flex-1 space-y-2">
-                            <h3 className="text-sm font-bold text-surface-900">Start Attendance Session</h3>
-                            <p className="text-xs text-surface-500">Upload classroom photos to automatically mark attendance via face recognition.</p>
-                            <input type="file" ref={fileRef} accept="image/*" multiple
-                                className="block w-full text-sm text-surface-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
-                        </div>
-                        <Button onClick={handleUpload} disabled={uploading}
-                            leftIcon={uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}>
-                            {uploading ? 'Uploading…' : 'Upload & Start'}
-                        </Button>
-                    </div>
-                    {uploadMessage && (
-                        <div className={`mt-3 p-3 rounded-lg text-sm font-medium ${uploadMessage.includes('success') || uploadMessage.includes('created') ? 'bg-green-50 text-green-700' : 'bg-error-50 text-error-700'}`}>
-                            {uploadMessage}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
 
             {/* Enrolled Students */}
             <Card>
@@ -195,7 +210,7 @@ export default function FacultyClassDetail() {
                 <CardHeader><CardTitle>Attendance Sessions</CardTitle></CardHeader>
                 <CardContent>
                     {sessions.length === 0 ? (
-                        <EmptyState icon="calendar" title="No sessions" description="Upload classroom photos above to start a session." compact />
+                        <EmptyState icon="calendar" title="No sessions" description="Click 'Add Attendance' to start a session." compact />
                     ) : (
                         <div className="space-y-2">
                             {sessions.map(s => (
@@ -205,6 +220,56 @@ export default function FacultyClassDetail() {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Add Attendance Modal */}
+            {showAttendanceModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto">
+                        <button onClick={() => { setShowAttendanceModal(false); setUploadMessage(''); }}
+                            className="absolute top-4 right-4 text-surface-400 hover:text-surface-600">
+                            <X className="w-5 h-5" />
+                        </button>
+                        <h2 className="text-lg font-bold text-surface-900 mb-4">Add Attendance</h2>
+                        <p className="text-sm text-surface-500 mb-5">Select the date and time, then upload classroom photos for face recognition.</p>
+
+                        <div className="space-y-4">
+                            {/* Date & Time */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium text-surface-700 mb-1">Date</label>
+                                    <input type="date" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)}
+                                        className="w-full h-10 px-3 rounded-lg border border-surface-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-surface-700 mb-1">Time</label>
+                                    <input type="time" value={sessionTime} onChange={(e) => setSessionTime(e.target.value)}
+                                        className="w-full h-10 px-3 rounded-lg border border-surface-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                                </div>
+                            </div>
+
+                            {/* Photo Upload */}
+                            <div>
+                                <label className="block text-sm font-medium text-surface-700 mb-1">Classroom Photos</label>
+                                <input type="file" ref={fileRef} accept="image/*" multiple
+                                    className="block w-full text-sm text-surface-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
+                                <p className="text-xs text-surface-400 mt-1">Take photos or select from gallery. Up to 10 images.</p>
+                            </div>
+
+                            {uploadMessage && (
+                                <div className={`p-3 rounded-lg text-sm font-medium ${uploadMessage.includes('success') || uploadMessage.includes('created') || uploadMessage.includes('Processing')
+                                    ? 'bg-green-50 text-green-700' : 'bg-error-50 text-error-700'}`}>
+                                    {uploadMessage}
+                                </div>
+                            )}
+
+                            <Button onClick={handleUpload} disabled={uploading} className="w-full"
+                                leftIcon={uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}>
+                                {uploading ? 'Uploading…' : 'Upload & Start Session'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

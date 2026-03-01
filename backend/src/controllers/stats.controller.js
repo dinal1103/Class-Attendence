@@ -221,3 +221,59 @@ exports.hodWeekly = async (req, res, next) => {
         next(err);
     }
 };
+
+/**
+ * GET /api/stats/admin/report
+ * Returns college-wide attendance report rows for the DataTable.
+ * Each row = one completed session with aggregated present/absent counts.
+ */
+exports.adminReport = async (req, res, next) => {
+    try {
+        const tid = req.tenantId;
+
+        // Get all completed sessions
+        const sessions = await AttendanceSession.find({
+            tenant_id: tid,
+            status: 'completed'
+        })
+            .populate({
+                path: 'class_id',
+                select: 'name code department_id',
+                populate: { path: 'department_id', select: 'name code' }
+            })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const results = await Promise.all(sessions.map(async (session) => {
+            const present = await AttendanceRecord.countDocuments({
+                session_id: session._id,
+                status: 'present'
+            });
+            const absent = await AttendanceRecord.countDocuments({
+                session_id: session._id,
+                status: 'absent'
+            });
+            const total = present + absent;
+            const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+
+            const d = new Date(session.sessionDate || session.createdAt);
+
+            return {
+                department: session.class_id?.department_id?.name || 'N/A',
+                className: session.class_id?.name || 'Unknown',
+                classCode: session.class_id?.code || '',
+                date: d.toLocaleDateString(),
+                time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                rawDate: d.toISOString(),
+                totalAttendance: total,
+                present,
+                absent,
+                percentage
+            };
+        }));
+
+        res.json(results);
+    } catch (err) {
+        next(err);
+    }
+};
