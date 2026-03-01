@@ -34,6 +34,7 @@ import AdminEnrollments from '@/modules/admin/AdminEnrollments';
 import AdminOverrides from '@/modules/admin/AdminOverrides';
 import AdminReports from '@/modules/admin/AdminReports';
 import AdminDepartmentDetail from '@/modules/admin/AdminDepartmentDetail';
+import AdminClassDetail from '@/modules/admin/AdminClassDetail';
 
 // HOD
 import HodDashboard from '@/modules/hod/HodDashboard';
@@ -93,6 +94,7 @@ export default function App() {
                 <Route element={<AppLayout />}>
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/admin/departments/:id" element={<AdminDepartmentDetail />} />
+                    <Route path="/admin/classes/:id" element={<AdminClassDetail />} />
                     <Route path="/admin/enrollments" element={<AdminEnrollments />} />
                     <Route path="/admin/overrides" element={<AdminOverrides />} />
                     <Route path="/admin/reports" element={<AdminReports />} />
@@ -109,8 +111,8 @@ export default function App() {
                 </Route>
             </Route>
 
-            {/* Catch-all */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            {/* Catch-all — redirect to role dashboard if logged in, else login */}
+            <Route path="*" element={<RootRedirect />} />
         </Routes>
     );
 }
@@ -127,4 +129,18 @@ function UnauthorizedPage() {
             </div>
         </div>
     );
+}
+
+function RootRedirect() {
+    const { isAuthenticated, user } = useAuthStore();
+    if (isAuthenticated && user) {
+        const dashboards: Record<string, string> = {
+            student: '/student',
+            faculty: '/faculty',
+            admin: '/admin',
+            hod: '/hod',
+        };
+        return <Navigate to={dashboards[user.role] || '/login'} replace />;
+    }
+    return <Navigate to="/login" replace />;
 }

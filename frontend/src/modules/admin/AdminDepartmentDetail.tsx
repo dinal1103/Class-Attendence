@@ -77,7 +77,8 @@ export default function AdminDepartmentDetail() {
             ) : (
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                     {classes.map(cls => (
-                        <Card key={cls._id} className="hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
+                        <Card key={cls._id} className="cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                            onClick={() => navigate(`/admin/classes/${cls._id}`)}>
                             <CardContent className="p-5">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0 flex-1">
