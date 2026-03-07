@@ -29,7 +29,7 @@ async function createInstitution() {
         tenant_id: college._id,
         department_id: dept._id,
         name: 'System Admin',
-        email: 'admin@mysmartcollege.edu',
+        email: 'admin@ldce.ac.in',
         password: 'SecurePassword123!',
         role: 'admin'
     });

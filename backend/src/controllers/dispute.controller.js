@@ -64,15 +64,27 @@ exports.create = async (req, res, next) => {
 exports.list = async (req, res, next) => {
     try {
         const filter = { tenant_id: req.tenantId };
+
         if (req.user.role === 'student') {
             filter.student_id = req.user.user_id;
+        } else if (req.user.role === 'faculty') {
+            // Faculty only see disputes for their own sessions
+            const mySessions = await AttendanceSession.find({ faculty_id: req.user.user_id }).select('_id');
+            const sessionIds = mySessions.map(s => s._id);
+            filter.session_id = { $in: sessionIds };
         }
+
         if (req.query.status) filter.status = req.query.status;
 
         const disputes = await Dispute.find(filter)
             .sort({ createdAt: -1 })
             .populate('student_id', 'name email enrollmentId')
-            .populate('session_id', 'createdAt');
+            .populate({
+                path: 'session_id',
+                select: 'createdAt class_id',
+                populate: { path: 'class_id', select: 'name code' }
+            });
+
         res.json(disputes);
     } catch (err) {
         next(err);

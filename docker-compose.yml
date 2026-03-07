@@ -46,6 +46,8 @@ services:
       - redis
       - mongodb
       - ai-face-service
+    volumes:
+      - temp-data:/app/temp
     restart: unless-stopped
 
   # Note: 
@@ -70,7 +72,10 @@ services:
       - redis
       - mongodb
       - ai-face-service
+    volumes:
+      - temp-data:/app/temp
     restart: unless-stopped
 
 volumes:
   mongo-data:
+  temp-data:

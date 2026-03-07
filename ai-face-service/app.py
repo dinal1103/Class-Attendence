@@ -13,6 +13,7 @@ Endpoints:
 import os
 import shutil
 import uuid
+import logging
 
 import cv2
 import numpy as np
@@ -38,6 +39,10 @@ app = FastAPI(
     description="Stateless face detection & embedding microservice. No database access.",
     version="1.0.0",
 )
+
+# Logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("ai-face-service")
 
 TEMP_DIR = os.path.join(os.path.dirname(__file__), "temp")
 os.makedirs(TEMP_DIR, exist_ok=True)
@@ -124,17 +129,29 @@ async def classroom_embedding(
 
     No identity resolution is performed — just raw face detections.
     """
+    logger.info(f"Received classroom embedding request with {len(images)} files")
+    
+    if not images or (len(images) == 1 and images[0].size == 0):
+         # Handle cases where multipart form might be sent but actually empty
+         raise HTTPException(status_code=422, detail="No classroom images provided in the request.")
+
     all_detections = []
 
     for img_file in images:
         content = await img_file.read()
+        if not content:
+            logger.warning(f"File {img_file.filename} is empty, skipping.")
+            continue
+            
         np_arr = np.frombuffer(content, np.uint8)
         img_bgr = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
         if img_bgr is None:
+            logger.error(f"Failed to decode image {img_file.filename}")
             continue  # Skip unreadable images
 
         detections = detect_all_faces(img_bgr)
+        logger.info(f"Detected {len(detections)} faces in {img_file.filename}")
         all_detections.extend(detections)
 
     return JSONResponse(content=all_detections)
