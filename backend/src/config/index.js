@@ -5,11 +5,11 @@ module.exports = {
     env: process.env.NODE_ENV || 'development',
 
     db: {
-        uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/smart-attendance'
+        uri: process.env.MONGODB_URI || 'mongodb://mongodb:27020/smart-attendance'
     },
 
     redis: {
-        host: process.env.REDIS_HOST || 'localhost',
+        host: process.env.REDIS_HOST || 'redis',
         port: process.env.REDIS_PORT || 6379
     },
 

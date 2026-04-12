@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   mongodb:
-    image: mongo:latest
+    image: docker.io/library/mongo:latest
     container_name: smart-attendance-mongodb
     ports:
       - "127.0.0.1:27020:27017"
@@ -11,7 +11,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:alpine
+    image: docker.io/library/redis:alpine
     container_name: smart-attendance-redis
     ports:
       - "127.0.0.1:6380:6379"
