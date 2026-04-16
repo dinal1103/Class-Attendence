@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, BookOpen, Users, ArrowLeft, CheckCircle, XCircle, Clock, CalendarCheck, Upload, Camera, Copy, X, Plus, ChevronDown, AlertCircle } from 'lucide-react';
+import { Loader2, BookOpen, Users, ArrowLeft, CheckCircle, XCircle, Clock, CalendarCheck, Upload, Camera, Copy, X, Plus, ChevronDown, AlertCircle, Archive } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/primitives/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/primitives/Card';
@@ -61,6 +61,8 @@ export default function FacultyClassDetail() {
     const [showCamera, setShowCamera] = useState(false);
     const [capturedFiles, setCapturedFiles] = useState<File[]>([]);
     const [visualizingSessionId, setVisualizingSessionId] = useState<string | null>(null);
+    const [showArchiveModal, setShowArchiveModal] = useState(false);
+    const [archiving, setArchiving] = useState(false);
 
     const fetchData = () => {
         Promise.all([
@@ -81,8 +83,13 @@ export default function FacultyClassDetail() {
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
-            setCapturedFiles(prev => [...prev, ...Array.from(e.target.files as FileList)]);
-            if (fileRef.current) fileRef.current.value = '';
+            const newFiles = Array.from(e.target.files);
+            setCapturedFiles(prev => [...prev, ...newFiles]);
+            
+            // Clear input asynchronously to avoid breaking the onChange cycle on mobile
+            setTimeout(() => {
+                if (fileRef.current) fileRef.current.value = '';
+            }, 0);
         }
     };
 
@@ -139,6 +146,15 @@ export default function FacultyClassDetail() {
                 <Button variant="secondary" size="sm" onClick={copyCode}
                     leftIcon={codeCopied ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}>
                     {codeCopied ? 'Copied!' : `Copy Code: ${cls.code}`}
+                </Button>
+                <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={() => setShowArchiveModal(true)}
+                    leftIcon={<Archive className="w-4 h-4 text-red-500" />}
+                    className="border-red-200 hover:bg-red-50 text-red-700 hover:border-red-300"
+                >
+                    Archive
                 </Button>
             </div>
 
@@ -269,9 +285,9 @@ export default function FacultyClassDetail() {
                                             type="file"
                                             ref={fileRef}
                                             accept="image/*"
-                                            multiple
                                             onChange={handleFileSelect}
                                             className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                            title="Upload Photo"
                                         />
                                         <Button 
                                             type="button" 
@@ -330,6 +346,51 @@ export default function FacultyClassDetail() {
                     sessionId={visualizingSessionId} 
                     onClose={() => setVisualizingSessionId(null)} 
                 />
+            )}
+
+            {/* Archive Class Confirmation Modal */}
+            {showArchiveModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 animate-in fade-in">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4 text-red-600">
+                            <Archive className="w-6 h-6" />
+                        </div>
+                        <h2 className="text-lg font-bold text-surface-900 mb-2">Archive this class?</h2>
+                        <p className="text-sm text-surface-600 mb-6">
+                            Archiving a class will permanently freeze it and generate a detailed final attendance report for the HOD. You will no longer be able to add sessions or enroll students.
+                        </p>
+                        
+                        {sessions.length === 0 && (
+                            <div className="mb-6 py-2 px-3 bg-yellow-50 text-yellow-800 text-sm rounded-lg flex items-start gap-2 border border-yellow-200">
+                                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-yellow-600" />
+                                <span>No attendance sessions were held. Archiving now will generate an empty report.</span>
+                            </div>
+                        )}
+
+                        <div className="flex justify-end gap-3">
+                            <Button variant="secondary" onClick={() => setShowArchiveModal(false)} disabled={archiving}>Cancel</Button>
+                            <Button 
+                                onClick={async () => {
+                                    try {
+                                        setArchiving(true);
+                                        await api.put(`/classes/${id}/archive`);
+                                        setShowArchiveModal(false);
+                                        navigate('/faculty');
+                                    } catch (err) {
+                                        console.error(err);
+                                    } finally {
+                                        setArchiving(false);
+                                    }
+                                }} 
+                                disabled={archiving}
+                                className="bg-red-600 hover:bg-red-700 border-none text-white"
+                                leftIcon={archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : undefined}
+                            >
+                                {archiving ? 'Archiving...' : 'Confirm Archive'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

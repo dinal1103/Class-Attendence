@@ -18,6 +18,7 @@ const attendanceRoutes = require('./routes/attendance.routes');
 const disputeRoutes = require('./routes/dispute.routes');
 const statsRoutes = require('./routes/stats.routes');
 const adminRoutes = require('./routes/admin.routes');
+const auditRoutes = require('./routes/audit.routes');
 
 const rateLimit = require('express-rate-limit');
 
@@ -94,6 +95,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/audit-logs', auditRoutes);
 
 // --------------------------------------------------
 // Error Handler (must be last)

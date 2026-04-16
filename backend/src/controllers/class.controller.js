@@ -2,6 +2,9 @@
  * class.controller.js — CRUD for Classes (tenant-scoped).
  */
 const Class = require('../models/Class');
+const AuditLog = require('../models/AuditLog');
+const AttendanceSession = require('../models/AttendanceSession');
+const AttendanceRecord = require('../models/AttendanceRecord');
 
 /**
  * POST /api/classes
@@ -157,6 +160,69 @@ exports.listAll = async (req, res, next) => {
             .populate('faculty_id', 'name email')
             .populate('department_id', 'name code');
         res.json(classes);
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * PUT /api/classes/:id/archive
+ * Archives a class and generates a final attendance report for the HOD.
+ */
+exports.archiveClass = async (req, res, next) => {
+    try {
+        const cls = await Class.findOne({ _id: req.params.id, tenant_id: req.tenantId }).populate('students', '_id name');
+        if (!cls) return res.status(404).json({ error: 'Class not found.' });
+
+        // Ensure requester is faculty of this class or admin
+        if (req.user.role === 'faculty' && cls.faculty_id.toString() !== req.user.user_id) {
+            return res.status(403).json({ error: 'Not authorized to archive this class.' });
+        }
+
+        // Generate Report
+        const sessions = await AttendanceSession.find({ class_id: cls._id, status: 'completed' });
+        const totalSessions = sessions.length;
+
+        let studentReport = [];
+        if (totalSessions > 0) {
+            const records = await AttendanceRecord.find({ session_id: { $in: sessions.map(s => s._id) } }).populate('student_id', 'name email');
+            
+            const studentStats = {};
+            for (const record of records) {
+                const sid = record.student_id ? record.student_id._id.toString() : 'unknown';
+                if (!studentStats[sid]) {
+                    studentStats[sid] = { name: record.student_id ? record.student_id.name : 'Unknown Student', totalPresent: 0, totalClasses: totalSessions };
+                }
+                if (record.status === 'present' || record.status === 'flagged') {
+                    studentStats[sid].totalPresent++;
+                }
+            }
+            
+            studentReport = Object.values(studentStats).map(s => ({
+                name: s.name,
+                attendancePercentage: Math.round((s.totalPresent / s.totalClasses) * 100),
+                totalPresent: s.totalPresent
+            }));
+        }
+
+        // Create Audit Log
+        await AuditLog.create({
+            tenant_id: req.tenantId,
+            type: 'class_archived',
+            class_id: cls._id,
+            performedBy: req.user.user_id,
+            details: {
+                totalStudents: cls.students.length,
+                totalSessions,
+                students: studentReport
+            }
+        });
+
+        // Mark as inactive
+        cls.isActive = false;
+        await cls.save();
+
+        res.json({ message: 'Class archived successfully', class: cls });
     } catch (err) {
         next(err);
     }
