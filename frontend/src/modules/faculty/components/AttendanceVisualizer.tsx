@@ -61,6 +61,10 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
                 }
 
                 setDetections(allDetections);
+                
+                if (allDetections.length === 0 && session.status === 'completed') {
+                    setError('Face recognition data is not available for this session. It might have been processed before this feature was enabled.');
+                }
             } catch (err) {
                 console.error('Failed to load visualizer data:', err);
                 setError('Failed to load recognition data.');
