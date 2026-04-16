@@ -23,6 +23,10 @@ const attendanceRecordSchema = new mongoose.Schema({
         enum: ['present', 'flagged', 'absent'],
         required: true
     },
+    bbox: {
+        type: [Number],
+        default: []
+    },
     confidenceScore: {
         type: Number,
         default: 0

@@ -165,3 +165,36 @@ exports.getSessionRecords = async (req, res, next) => {
         next(err);
     }
 };
+
+/**
+ * GET /api/attendance/sessions/:id/image/:index
+ */
+exports.getSessionImage = async (req, res, next) => {
+    try {
+        const session = await AttendanceSession.findOne({
+            _id: req.params.id,
+            tenant_id: req.tenantId
+        });
+
+        if (!session) return res.status(404).json({ error: 'Session not found.' });
+
+        const index = parseInt(req.params.index);
+        if (isNaN(index) || index < 0 || index >= (session.imagePaths?.length || 0)) {
+            return res.status(400).json({ error: 'Invalid image index.' });
+        }
+
+        const imagePath = session.imagePaths[index];
+        if (!fs.existsSync(imagePath)) {
+            return res.status(404).json({ error: 'Image file not found on server.' });
+        }
+
+        // Faculty restricted to their own sessions
+        if (req.user.role === 'faculty' && session.faculty_id.toString() !== req.user.user_id) {
+            return res.status(403).json({ error: 'Access denied.' });
+        }
+
+        res.sendFile(imagePath);
+    } catch (err) {
+        next(err);
+    }
+};

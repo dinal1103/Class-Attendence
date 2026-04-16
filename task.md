@@ -1,4 +1,1 @@
-1. Remove Enrollments Page from Admin.
-2. Remove Attendence Override Page from Admin and HOD.
-3. Add Facility to Change Password for all.
-4. Add facility for live class Attendence Using Mobile or any other Camera.
+1. Give Photo of class with identified students marked green and unidentified students marked red.

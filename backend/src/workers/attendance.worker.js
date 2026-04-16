@@ -58,7 +58,7 @@ function greedyMatch(detections, enrolledStudents, highThreshold, lowThreshold) 
         for (let s = 0; s < enrolledStudents.length; s++) {
             const score = cosineSimilarity(detections[d].embedding, enrolledStudents[s].embedding);
             if (score >= lowThreshold) {
-                pairs.push({ d, s, score });
+                pairs.push({ d, s, score, bbox: detections[d].bbox });
             }
         }
     }
@@ -78,7 +78,9 @@ function greedyMatch(detections, enrolledStudents, highThreshold, lowThreshold) 
         matches.push({
             studentId: enrolledStudents[pair.s].id,
             score: pair.score,
-            status: pair.score >= highThreshold ? 'present' : 'flagged'
+            status: pair.score >= highThreshold ? 'present' : 'flagged',
+            bbox: pair.bbox,
+            detectionIdx: pair.d
         });
     }
 
@@ -149,6 +151,19 @@ async function processAttendance(job) {
         // 5. Greedy matching
         const matches = greedyMatch(detections, enrolledStudents, highThreshold, lowThreshold);
         const matchedStudentIds = new Set(matches.map(m => m.studentId.toString()));
+        const matchedDetectionIndices = new Set(matches.map(m => m.detectionIdx));
+
+        // 5b. Capture unidentified detections
+        const unidentified = [];
+        for (let i = 0; i < detections.length; i++) {
+            if (!matchedDetectionIndices.has(i)) {
+                unidentified.push({
+                    bbox: detections[i].bbox,
+                    imageIndex: 0 // Simplification: assume first image for now if multiple aren't keyed
+                });
+            }
+        }
+        session.unidentifiedDetections = unidentified;
 
         // 6. Build attendance records
         const records = [];
@@ -160,7 +175,8 @@ async function processAttendance(job) {
                 session_id: sessionId,
                 student_id: match.studentId,
                 status: match.status,
-                confidenceScore: match.score
+                confidenceScore: match.score,
+                bbox: match.bbox
             });
         }
 
@@ -197,8 +213,7 @@ async function processAttendance(job) {
         console.error(`[Worker] Session ${sessionId} FAILED:`, err.message);
         throw err;
     } finally {
-        // Always clean up temp images
-        storage.deleteSessionFiles(session._id.toString());
+        // storage.deleteSessionFiles(session._id.toString());
     }
 }
 

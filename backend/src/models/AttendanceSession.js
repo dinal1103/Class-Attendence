@@ -22,9 +22,12 @@ const attendanceSessionSchema = new mongoose.Schema({
         enum: ['pending', 'processing', 'completed', 'failed', 'rejected'],
         default: 'pending'
     },
-    // Path to temporary image(s) for this session
     imagePaths: [{
         type: String
+    }],
+    unidentifiedDetections: [{
+        bbox: [Number],
+        imageIndex: { type: Number, default: 0 }
     }],
     totalDetections: {
         type: Number,

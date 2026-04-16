@@ -15,5 +15,6 @@ router.post(
 router.get('/sessions', ctrl.listSessions);
 router.get('/sessions/:id', ctrl.getSession);
 router.get('/sessions/:id/records', ctrl.getSessionRecords);
+router.get('/sessions/:id/image/:index', ctrl.getSessionImage);
 
 module.exports = router;

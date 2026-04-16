@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, BookOpen, Users, ArrowLeft, CheckCircle, XCircle, Clock, CalendarCheck, Upload, Camera, Copy, X, Plus } from 'lucide-react';
+import { Loader2, BookOpen, Users, ArrowLeft, CheckCircle, XCircle, Clock, CalendarCheck, Upload, Camera, Copy, X, Plus, ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/primitives/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/primitives/Card';
 import { EmptyState } from '@/components/composite/EmptyState';
 import { CameraCapture } from '@/components/composite/CameraCapture';
+import { AttendanceVisualizer } from './components/AttendanceVisualizer';
 import api from '@/api/axios';
 
 interface Student {
@@ -58,6 +60,7 @@ export default function FacultyClassDetail() {
 
     const [showCamera, setShowCamera] = useState(false);
     const [capturedFiles, setCapturedFiles] = useState<File[]>([]);
+    const [visualizingSessionId, setVisualizingSessionId] = useState<string | null>(null);
 
     const fetchData = () => {
         Promise.all([
@@ -209,7 +212,7 @@ export default function FacultyClassDetail() {
                     ) : (
                         <div className="space-y-2">
                             {sessions.map(s => (
-                                <SessionRow key={s._id} session={s} />
+                                <SessionRow key={s._id} session={s} onVerify={() => setVisualizingSessionId(s._id)} />
                             ))}
                         </div>
                     )}
@@ -317,11 +320,17 @@ export default function FacultyClassDetail() {
                     onClose={() => setShowCamera(false)} 
                 />
             )}
+            {visualizingSessionId && (
+                <AttendanceVisualizer 
+                    sessionId={visualizingSessionId} 
+                    onClose={() => setVisualizingSessionId(null)} 
+                />
+            )}
         </div>
     );
 }
 
-function SessionRow({ session }: { session: Session }) {
+function SessionRow({ session, onVerify }: { session: any, onVerify: () => void }) {
     const [records, setRecords] = useState<AttendanceRecord[]>([]);
     const [expanded, setExpanded] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -345,6 +354,18 @@ function SessionRow({ session }: { session: Session }) {
                     session.status === 'pending' ? 'bg-yellow-50 text-yellow-700' :
                         'bg-surface-100 text-surface-600'
                     }`}>{session.status}</span>
+                <div className="flex items-center gap-2">
+                    {session.status === 'completed' && (
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); onVerify(); }}
+                            className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                            title="Verify recognition"
+                        >
+                            <Camera className="w-4 h-4" />
+                        </button>
+                    )}
+                    <ChevronDown className={cn("w-4 h-4 text-surface-400 transition-transform", expanded && "rotate-180")} />
+                </div>
             </div>
             {expanded && (
                 <div className="px-3 pb-3 border-t border-surface-100">
