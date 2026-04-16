@@ -56,6 +56,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
         { label: 'Enrollments', path: ROUTES.ADMIN.ENROLLMENTS, icon: Users },
         { label: 'Overrides', path: ROUTES.ADMIN.OVERRIDES, icon: FileCheck },
         { label: 'Reports', path: ROUTES.ADMIN.REPORTS, icon: BarChart3 },
+        { label: 'Staff Management', path: ROUTES.ADMIN.STAFF, icon: Shield },
     ],
     hod: [
         { label: 'Dashboard', path: ROUTES.HOD.DASHBOARD, icon: LayoutDashboard },

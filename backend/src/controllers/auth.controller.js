@@ -15,6 +15,12 @@ exports.register = async (req, res, next) => {
     try {
         const { name, email, password, role, tenantCode, departmentId, enrollmentId } = req.body;
 
+        // Only students are allowed to register publicly
+        const requestedRole = role || 'student';
+        if (requestedRole !== 'student') {
+            return res.status(403).json({ error: 'Public registration is only allowed for student accounts. Staff accounts must be created by an Admin.' });
+        }
+
         // Find tenant by code
         const tenant = await Tenant.findOne({ code: tenantCode, isActive: true });
         if (!tenant) {

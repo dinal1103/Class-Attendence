@@ -3,10 +3,10 @@
  *
  * Flow:
  *   1. Read temp image paths from job payload
- *   2. Call AI servicudent embeddings for the class
+ *   2. Call AI service for classroom face detections
+ *   3. Decrypt enrolled student embeddings for the class
  *   4. Greedy one-to-one matching using cosine similarity
- *   5. Apply two-the for classroom face detections
- *   3. Decrypt enrolled streshold decision model:
+ *   5. Apply two-threshold decision model:
  *        ≥ HIGH  → present
  *        LOW–HIGH → flagged (present with mark)
  *        < LOW   → ignored

@@ -64,3 +64,20 @@ exports.update = async (req, res, next) => {
         next(err);
     }
 };
+
+/**
+ * DELETE /api/departments/:id
+ */
+exports.remove = async (req, res, next) => {
+    try {
+        const dept = await Department.findOneAndUpdate(
+            { _id: req.params.id, tenant_id: req.tenantId },
+            { isActive: false },
+            { new: true }
+        );
+        if (!dept) return res.status(404).json({ error: 'Department not found.' });
+        res.json({ message: 'Department deactivated successfully.', dept });
+    } catch (err) {
+        next(err);
+    }
+};

@@ -10,5 +10,6 @@ router.post('/', authorize('admin'), ctrl.create);
 router.get('/', ctrl.list);
 router.get('/:id', ctrl.getById);
 router.put('/:id', authorize('admin'), ctrl.update);
+router.delete('/:id', authorize('admin'), ctrl.remove);
 
 module.exports = router;

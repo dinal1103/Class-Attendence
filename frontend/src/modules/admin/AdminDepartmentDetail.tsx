@@ -33,6 +33,7 @@ export default function AdminDepartmentDetail() {
     const [classes, setClasses] = useState<ClassItem[]>([]);
     const [classAttendance, setClassAttendance] = useState<ClassAttendance[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         Promise.all([
@@ -52,6 +53,19 @@ export default function AdminDepartmentDetail() {
         return found?.rate ?? 0;
     };
 
+    const handleDeleteDept = async () => {
+        if (!confirm('Are you sure you want to delete this department? This action will deactivate it.')) return;
+        setIsDeleting(true);
+        try {
+            await api.delete(`/departments/${id}`);
+            navigate('/admin');
+        } catch (err) {
+            alert('Failed to delete department');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     if (loading) {
         return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary-500" /></div>;
     }
@@ -68,6 +82,11 @@ export default function AdminDepartmentDetail() {
                 <div>
                     <h1 className="text-xl font-bold text-surface-900">{dept.name}</h1>
                     <p className="text-sm text-surface-500">Code: {dept.code} · {classes.length} classes</p>
+                </div>
+                <div className="ml-auto">
+                    <Button variant="danger" size="sm" onClick={handleDeleteDept} loading={isDeleting}>
+                        Delete Department
+                    </Button>
                 </div>
             </div>
 

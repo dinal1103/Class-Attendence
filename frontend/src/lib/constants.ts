@@ -23,6 +23,7 @@ export const ROUTES = {
         ENROLLMENTS: '/admin/enrollments',
         OVERRIDES: '/admin/overrides',
         REPORTS: '/admin/reports',
+        STAFF: '/admin/staff',
     },
 
     HOD: {
