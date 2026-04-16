@@ -1,1 +1,2 @@
-1. Give Photo of class with identified students marked green and unidentified students marked red.
+1. Add a feature to Archive the Class to Faculty
+2. When a class is Archived it should Generate a Detailed Report for that Class and show it under HOD Audit Logs

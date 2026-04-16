@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, BookOpen, Users, ArrowLeft, CheckCircle, XCircle, Clock, CalendarCheck, Upload, Camera, Copy, X, Plus, ChevronDown } from 'lucide-react';
+import { Loader2, BookOpen, Users, ArrowLeft, CheckCircle, XCircle, Clock, CalendarCheck, Upload, Camera, Copy, X, Plus, ChevronDown, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/primitives/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/primitives/Card';
@@ -79,11 +79,15 @@ export default function FacultyClassDetail() {
         }
     };
 
-    const handleUpload = async () => {
-        const inputFiles = fileRef.current?.files ? Array.from(fileRef.current.files) : [];
-        const allFiles = [...inputFiles, ...capturedFiles];
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setCapturedFiles(prev => [...prev, ...Array.from(e.target.files as FileList)]);
+            if (fileRef.current) fileRef.current.value = '';
+        }
+    };
 
-        if (allFiles.length === 0) {
+    const handleUpload = async () => {
+        if (capturedFiles.length === 0) {
             setUploadMessage('Please select or capture at least one photo.');
             return;
         }
@@ -94,7 +98,7 @@ export default function FacultyClassDetail() {
         formData.append('classId', id!);
         formData.append('sessionDate', `${sessionDate}T${sessionTime}:00`);
         
-        allFiles.forEach(file => {
+        capturedFiles.forEach(file => {
             formData.append('images', file);
         });
 
@@ -266,6 +270,7 @@ export default function FacultyClassDetail() {
                                             ref={fileRef}
                                             accept="image/*"
                                             multiple
+                                            onChange={handleFileSelect}
                                             className="absolute inset-0 opacity-0 cursor-pointer z-10"
                                         />
                                         <Button 
@@ -369,7 +374,12 @@ function SessionRow({ session, onVerify }: { session: any, onVerify: () => void 
             </div>
             {expanded && (
                 <div className="px-3 pb-3 border-t border-surface-100">
-                    {loading ? (
+                    {session.status === 'rejected' && session.rejectionReason ? (
+                        <div className="py-3 px-2 bg-red-50 text-red-700 text-sm rounded-lg mt-2 flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                            <p>{session.rejectionReason}</p>
+                        </div>
+                    ) : loading ? (
                         <div className="flex items-center justify-center py-3"><Loader2 className="w-5 h-5 animate-spin text-primary-500" /></div>
                     ) : records.length === 0 ? (
                         <p className="text-xs text-surface-400 py-2">No records for this session.</p>
@@ -378,14 +388,25 @@ function SessionRow({ session, onVerify }: { session: any, onVerify: () => void 
                             {records.map(r => (
                                 <div key={r._id} className="flex items-center justify-between py-2 px-2 bg-surface-50 rounded-lg">
                                     <div className="flex items-center gap-2">
-                                        {r.status === 'present' ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
+                                        {r.status === 'present' ? (
+                                            <CheckCircle className="w-4 h-4 text-green-500" />
+                                        ) : r.status === 'flagged' ? (
+                                            <AlertCircle className="w-4 h-4 text-amber-500" />
+                                        ) : (
+                                            <XCircle className="w-4 h-4 text-red-500" />
+                                        )}
                                         <span className="text-sm text-surface-700">{r.student_id?.name || 'Unknown'}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${r.status === 'present' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                        <span className={cn(
+                                            "text-xs font-medium px-2 py-0.5 rounded-full",
+                                            r.status === 'present' ? 'bg-green-50 text-green-700' : 
+                                            r.status === 'flagged' ? 'bg-amber-50 text-amber-700' :
+                                            'bg-red-50 text-red-700'
+                                        )}>
                                             {r.status}
                                         </span>
-                                        <span className="text-xs text-surface-400">{Math.round(r.confidenceScore * 100)}%</span>
+                                        <span className="text-xs text-surface-400">{Math.round((r.confidenceScore || 0) * 100)}%</span>
                                     </div>
                                 </div>
                             ))}

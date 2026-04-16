@@ -8,6 +8,7 @@ interface BBox {
     studentName?: string;
     studentEmail?: string;
     isIdentified: boolean;
+    status?: 'present' | 'flagged' | 'absent';
 }
 
 interface AttendanceVisualizerProps {
@@ -45,7 +46,8 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
                             bbox: r.bbox,
                             studentName: r.student_id?.name,
                             studentEmail: r.student_id?.email,
-                            isIdentified: true
+                            isIdentified: true,
+                            status: r.status
                         });
                     }
                 });
@@ -102,7 +104,7 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
             <div className="h-16 px-6 flex items-center justify-between text-white border-b border-white/10">
                 <div>
                     <h3 className="text-lg font-bold">Recognition Analysis</h3>
-                    <p className="text-xs text-white/50">Green: Identified • Red: Unidentified</p>
+                    <p className="text-xs text-white/50">Green: Present • Amber: Flagged • Red: Unidentified</p>
                 </div>
                 <button 
                     onClick={onClose}
@@ -153,9 +155,11 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
                                     }}
                                     className={cn(
                                         "absolute border-2 rounded-sm group cursor-help transition-all duration-200",
-                                        det.isIdentified 
+                                        det.status === 'present' 
                                             ? "border-green-500 bg-green-500/10 hover:bg-green-500/30" 
-                                            : "border-red-500 bg-red-500/10 hover:bg-red-500/30"
+                                            : det.status === 'flagged'
+                                                ? "border-amber-500 bg-amber-500/10 hover:bg-amber-500/30"
+                                                : "border-red-500 bg-red-500/10 hover:bg-red-500/30"
                                     )}
                                 >
                                     {/* Tooltip */}
@@ -163,8 +167,12 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
                                         <div className="bg-white text-surface-900 text-[10px] px-2 py-1.5 rounded-md shadow-xl whitespace-nowrap border border-surface-100">
                                             {det.isIdentified ? (
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                                                    <div className={cn(
+                                                        "w-2 h-2 rounded-full",
+                                                        det.status === 'present' ? "bg-green-500" : "bg-amber-500"
+                                                    )} />
                                                     <span className="font-bold">{det.studentName}</span>
+                                                    {det.status === 'flagged' && <span className="text-[8px] opacity-70 ml-auto">FLAGGED</span>}
                                                 </div>
                                             ) : (
                                                 <div className="flex items-center gap-2 text-red-600 font-semibold">
@@ -187,7 +195,11 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
                 <div className="h-20 bg-black/40 border-t border-white/5 flex items-center justify-center gap-8 text-white/70 text-sm">
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-green-500" />
-                        <span>Present ({detections.filter(d => d.isIdentified).length})</span>
+                        <span>Present ({detections.filter(d => d.status === 'present').length})</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-amber-500" />
+                        <span>Flagged ({detections.filter(d => d.status === 'flagged').length})</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-red-500" />
