@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { Loader2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Clock, Download } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import DataTable from '@/components/composite/DataTable';
 import type { Column } from '@/components/composite/DataTable';
@@ -138,6 +138,20 @@ export default function FacultyAttendance() {
             label: 'Time',
             sortable: true,
         },
+        {
+            key: 'rawDate',
+            label: 'Export',
+            sortable: false,
+            render: (_val, row) => (
+                <button 
+                    onClick={() => handleExportDetails([row])}
+                    className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                    title="Export this session"
+                >
+                    <Download className="w-4 h-4" />
+                </button>
+            )
+        }
     ];
 
     if (loading) {

@@ -11,8 +11,8 @@ router.get('/available', ctrl.listAll);
 router.post('/join', authorize('student'), ctrl.joinByCode);
 router.get('/', ctrl.list);
 router.get('/:id', ctrl.getById);
-router.put('/:id', authorize('admin', 'faculty'), ctrl.update);
 router.put('/:id/archive', authorize('admin', 'faculty'), ctrl.archiveClass);
+router.put('/:id', authorize('admin', 'faculty'), ctrl.update);
 router.post('/:id/students', authorize('admin', 'faculty'), ctrl.addStudents);
 
 module.exports = router;

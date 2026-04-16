@@ -95,6 +95,7 @@ exports.getById = async (req, res, next) => {
  * PUT /api/classes/:id
  */
 exports.update = async (req, res, next) => {
+    console.log('[DEBUG] update handler hit with id:', req.params.id);
     try {
         const cls = await Class.findOneAndUpdate(
             { _id: req.params.id, tenant_id: req.tenantId },
@@ -170,6 +171,7 @@ exports.listAll = async (req, res, next) => {
  * Archives a class and generates a final attendance report for the HOD.
  */
 exports.archiveClass = async (req, res, next) => {
+    console.log('[DEBUG] archiveClass handler hit with id:', req.params.id);
     try {
         const cls = await Class.findOne({ _id: req.params.id, tenant_id: req.tenantId }).populate('students', '_id name');
         if (!cls) return res.status(404).json({ error: 'Class not found.' });

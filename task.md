@@ -1,3 +1,3 @@
-1. In attedence viewer of Faculty we need to export the data. currently it only filters based on subject and date but we need to add filters for single class session too.
-2. we need to show which student was present and which was absent in the  generated excel file.
-3. completely change how we mark present if detection is greater than 35 they are present otherwise absent. No need for yellow marking
+1. [x] Archiving Doesnt work at the moment
+2. [x] detailed report is not session based filterable
+3. [x] remove attendence record from admin view

@@ -166,8 +166,8 @@ function SessionRow({ session }: { session: Session }) {
             <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-surface-50 transition-colors" onClick={toggle}>
                 <p className="text-sm font-medium text-surface-900">{new Date(session.createdAt).toLocaleString()}</p>
                 <span className={`text-xs font-medium px-2 py-1 rounded-full ${session.status === 'completed' ? 'bg-green-50 text-green-700' :
-                        session.status === 'pending' ? 'bg-yellow-50 text-yellow-700' :
-                            'bg-surface-100 text-surface-600'
+                    session.status === 'pending' ? 'bg-yellow-50 text-yellow-700' :
+                        'bg-surface-100 text-surface-600'
                     }`}>{session.status}</span>
             </div>
             {expanded && (
