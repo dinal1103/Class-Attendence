@@ -53,16 +53,13 @@ const navByRole: Record<UserRole, NavItem[]> = {
     ],
     admin: [
         { label: 'Dashboard', path: ROUTES.ADMIN.DASHBOARD, icon: LayoutDashboard },
-        { label: 'Enrollments', path: ROUTES.ADMIN.ENROLLMENTS, icon: Users },
-        { label: 'Overrides', path: ROUTES.ADMIN.OVERRIDES, icon: FileCheck },
-        { label: 'Reports', path: ROUTES.ADMIN.REPORTS, icon: BarChart3 },
         { label: 'Staff Management', path: ROUTES.ADMIN.STAFF, icon: Shield },
+        { label: 'Reports', path: ROUTES.ADMIN.REPORTS, icon: BarChart3 },
     ],
     hod: [
         { label: 'Dashboard', path: ROUTES.HOD.DASHBOARD, icon: LayoutDashboard },
         { label: 'Approvals', path: ROUTES.HOD.APPROVALS, icon: ClipboardList },
         { label: 'Audit Logs', path: ROUTES.HOD.AUDIT, icon: Shield },
-        { label: 'Overrides', path: ROUTES.HOD.OVERRIDES, icon: FileCheck },
     ],
 };
 
@@ -143,6 +140,23 @@ export function Sidebar({ isCollapsed, onToggleCollapse, mobileOpen, onMobileClo
                 >
                     {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                 </button>
+            </div>
+
+            {/* Change Password Link */}
+            <div className="px-3 pb-4">
+                <NavLink
+                    to={ROUTES.CHANGE_PASSWORD}
+                    onClick={onMobileClose}
+                    className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                        location.pathname === ROUTES.CHANGE_PASSWORD
+                            ? 'bg-primary-50 text-primary-700'
+                            : 'text-surface-600 hover:bg-surface-100 hover:text-surface-900'
+                    )}
+                >
+                    <Shield className="w-5 h-5 flex-shrink-0" />
+                    {!isCollapsed && <span>Change Password</span>}
+                </NavLink>
             </div>
         </div>
     );

@@ -1,14 +1,16 @@
 /**
  * PrivateRoute — Protects routes by role.
  */
+import type { ReactNode } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import useAuthStore, { type UserRole } from '@/store/authStore';
 
 interface PrivateRouteProps {
     allowedRoles: UserRole[];
+    children?: ReactNode;
 }
 
-export default function PrivateRoute({ allowedRoles }: PrivateRouteProps) {
+export default function PrivateRoute({ allowedRoles, children }: PrivateRouteProps) {
     const { isAuthenticated, isLoading, user } = useAuthStore();
 
     if (isLoading) {
@@ -27,5 +29,5 @@ export default function PrivateRoute({ allowedRoles }: PrivateRouteProps) {
         return <Navigate to="/unauthorized" replace />;
     }
 
-    return <Outlet />;
+    return children ? <>{children}</> : <Outlet />;
 }

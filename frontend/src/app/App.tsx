@@ -12,6 +12,7 @@ import PrivateRoute from './PrivateRoute';
 // Auth
 import LoginPage from '@/auth/LoginPage';
 import RegisterPage from '@/auth/RegisterPage';
+import ChangePasswordPage from '@/auth/ChangePasswordPage';
 
 // Student
 import StudentDashboard from '@/modules/student/StudentDashboard';
@@ -30,8 +31,6 @@ import FacultyClassDetail from '@/modules/faculty/FacultyClassDetail';
 
 // Admin
 import AdminDashboard from '@/modules/admin/AdminDashboard';
-import AdminEnrollments from '@/modules/admin/AdminEnrollments';
-import AdminOverrides from '@/modules/admin/AdminOverrides';
 import AdminReports from '@/modules/admin/AdminReports';
 import AdminDepartmentDetail from '@/modules/admin/AdminDepartmentDetail';
 import AdminClassDetail from '@/modules/admin/AdminClassDetail';
@@ -41,7 +40,6 @@ import AdminStaffManagement from '@/modules/admin/AdminStaffManagement';
 import HodDashboard from '@/modules/hod/HodDashboard';
 import HodApprovals from '@/modules/hod/HodApprovals';
 import HodAuditLogs from '@/modules/hod/HodAuditLogs';
-import HodOverrides from '@/modules/hod/HodOverrides';
 
 export default function App() {
     const initialize = useAuthStore((s) => s.initialize);
@@ -65,6 +63,9 @@ export default function App() {
             {/* Public */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/change-password" element={<PrivateRoute allowedRoles={['student', 'faculty', 'admin', 'hod']}><AppLayout /></PrivateRoute>}>
+                <Route index element={<ChangePasswordPage />} />
+            </Route>
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
             {/* Student Routes */}
@@ -96,8 +97,6 @@ export default function App() {
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/admin/departments/:id" element={<AdminDepartmentDetail />} />
                     <Route path="/admin/classes/:id" element={<AdminClassDetail />} />
-                    <Route path="/admin/enrollments" element={<AdminEnrollments />} />
-                    <Route path="/admin/overrides" element={<AdminOverrides />} />
                     <Route path="/admin/reports" element={<AdminReports />} />
                     <Route path="/admin/staff" element={<AdminStaffManagement />} />
                 </Route>
@@ -109,7 +108,6 @@ export default function App() {
                     <Route path="/hod" element={<HodDashboard />} />
                     <Route path="/hod/approvals" element={<HodApprovals />} />
                     <Route path="/hod/audit" element={<HodAuditLogs />} />
-                    <Route path="/hod/overrides" element={<HodOverrides />} />
                 </Route>
             </Route>
 

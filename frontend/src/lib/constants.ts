@@ -20,8 +20,6 @@ export const ROUTES = {
 
     ADMIN: {
         DASHBOARD: '/admin',
-        ENROLLMENTS: '/admin/enrollments',
-        OVERRIDES: '/admin/overrides',
         REPORTS: '/admin/reports',
         STAFF: '/admin/staff',
     },
@@ -30,6 +28,7 @@ export const ROUTES = {
         DASHBOARD: '/hod',
         APPROVALS: '/hod/approvals',
         AUDIT: '/hod/audit',
-        OVERRIDES: '/hod/overrides',
     },
+
+    CHANGE_PASSWORD: '/change-password',
 } as const;

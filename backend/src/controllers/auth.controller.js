@@ -128,6 +128,34 @@ exports.getMe = async (req, res, next) => {
     }
 };
 
+/**
+ * POST /api/auth/change-password
+ * Body: { currentPassword, newPassword }
+ */
+exports.changePassword = async (req, res, next) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Current and new passwords are required.' });
+        }
+
+        const user = await User.findById(req.user.user_id);
+        if (!user) return res.status(404).json({ error: 'User not found.' });
+
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Incorrect current password.' });
+        }
+
+        user.password = newPassword;
+        await user.save(); // Triggers pre-save hashing
+
+        res.json({ message: 'Password updated successfully.' });
+    } catch (err) {
+        next(err);
+    }
+};
+
 function _signToken(user, tenantId) {
     return jwt.sign(
         {

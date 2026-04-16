@@ -4,6 +4,7 @@ import { Loader2, BookOpen, Users, ArrowLeft, CheckCircle, XCircle, Clock, Calen
 import { Button } from '@/components/primitives/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/primitives/Card';
 import { EmptyState } from '@/components/composite/EmptyState';
+import { CameraCapture } from '@/components/composite/CameraCapture';
 import api from '@/api/axios';
 
 interface Student {
@@ -55,6 +56,9 @@ export default function FacultyClassDetail() {
         return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     });
 
+    const [showCamera, setShowCamera] = useState(false);
+    const [capturedFiles, setCapturedFiles] = useState<File[]>([]);
+
     const fetchData = () => {
         Promise.all([
             api.get(`/classes/${id}`).then(r => setCls(r.data)),
@@ -73,9 +77,11 @@ export default function FacultyClassDetail() {
     };
 
     const handleUpload = async () => {
-        const files = fileRef.current?.files;
-        if (!files || files.length === 0) {
-            setUploadMessage('Please select at least one photo.');
+        const inputFiles = fileRef.current?.files ? Array.from(fileRef.current.files) : [];
+        const allFiles = [...inputFiles, ...capturedFiles];
+
+        if (allFiles.length === 0) {
+            setUploadMessage('Please select or capture at least one photo.');
             return;
         }
 
@@ -84,9 +90,10 @@ export default function FacultyClassDetail() {
         const formData = new FormData();
         formData.append('classId', id!);
         formData.append('sessionDate', `${sessionDate}T${sessionTime}:00`);
-        for (let i = 0; i < files.length; i++) {
-            formData.append('images', files[i]);
-        }
+        
+        allFiles.forEach(file => {
+            formData.append('images', file);
+        });
 
         try {
             const res = await api.post('/attendance/sessions', formData, {
@@ -94,6 +101,7 @@ export default function FacultyClassDetail() {
             });
             setUploadMessage(res.data.message || 'Session created successfully!');
             if (fileRef.current) fileRef.current.value = '';
+            setCapturedFiles([]);
             const sessRes = await api.get(`/attendance/sessions?classId=${id}`);
             setSessions(sessRes.data);
             setTimeout(() => { setShowAttendanceModal(false); setUploadMessage(''); }, 1500);
@@ -234,12 +242,57 @@ export default function FacultyClassDetail() {
                                 </div>
                             </div>
 
-                            {/* Photo Upload */}
-                            <div>
-                                <label className="block text-sm font-medium text-surface-700 mb-1">Classroom Photos</label>
-                                <input type="file" ref={fileRef} accept="image/*" multiple
-                                    className="block w-full text-sm text-surface-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
-                                <p className="text-xs text-surface-400 mt-1">Take photos or select from gallery. Up to 10 images.</p>
+                            {/* Photo Selection/Capture */}
+                            <div className="space-y-3">
+                                <label className="block text-sm font-medium text-surface-700">Classroom Photos</label>
+                                
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button 
+                                        type="button" 
+                                        variant="secondary" 
+                                        className="h-20 flex-col gap-2 border-dashed border-2 bg-surface-50/50 hover:bg-surface-50"
+                                        onClick={() => setShowCamera(true)}
+                                    >
+                                        <Camera className="w-5 h-5 text-primary-600" />
+                                        <span className="text-xs font-semibold">Take Photo</span>
+                                    </Button>
+
+                                    <div className="relative group">
+                                        <input
+                                            type="file"
+                                            ref={fileRef}
+                                            accept="image/*"
+                                            multiple
+                                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                        />
+                                        <Button 
+                                            type="button" 
+                                            variant="secondary" 
+                                            className="h-20 w-full flex-col gap-2 border-dashed border-2 bg-surface-50/50 hover:bg-surface-50"
+                                        >
+                                            <Upload className="w-5 h-5 text-surface-500" />
+                                            <span className="text-xs font-semibold text-surface-600">Upload Photos</span>
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {capturedFiles.length > 0 && (
+                                    <div className="grid grid-cols-4 gap-2 py-2">
+                                        {capturedFiles.map((file, idx) => (
+                                            <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-surface-200">
+                                                <img src={URL.createObjectURL(file)} alt="capture" className="w-full h-full object-cover" />
+                                                <button 
+                                                    onClick={() => setCapturedFiles(prev => prev.filter((_, i) => i !== idx))}
+                                                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                
+                                <p className="text-xs text-surface-400">Capture or select up to 10 classroom photos. Ensure all student faces are visible.</p>
                             </div>
 
                             {uploadMessage && (
@@ -256,6 +309,13 @@ export default function FacultyClassDetail() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {showCamera && (
+                <CameraCapture 
+                    onCapture={(file) => setCapturedFiles(prev => [...prev, file])} 
+                    onClose={() => setShowCamera(false)} 
+                />
             )}
         </div>
     );
