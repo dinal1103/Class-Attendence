@@ -22,6 +22,7 @@ interface DataTableProps<T extends Record<string, any>> {
     dateKey?: keyof T & string;
     pageSize?: number;
     exportFileName?: string;
+    onExport?: (filteredData: T[]) => void;
 }
 
 type SortDir = 'asc' | 'desc' | null;
@@ -38,6 +39,7 @@ export default function DataTable<T extends Record<string, any>>({
     dateKey,
     pageSize = 10,
     exportFileName = 'export',
+    onExport,
 }: DataTableProps<T>) {
     /* ---------- local state ---------- */
     const [search, setSearch] = useState('');
@@ -114,6 +116,10 @@ export default function DataTable<T extends Record<string, any>>({
 
     /* ---------- export ---------- */
     const handleExport = () => {
+        if (onExport) {
+            onExport(filtered);
+            return;
+        }
         const exportData = filtered.map((row) => {
             const obj: Record<string, any> = {};
             columns.forEach((col) => {

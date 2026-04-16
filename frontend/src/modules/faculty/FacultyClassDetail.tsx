@@ -451,8 +451,6 @@ function SessionRow({ session, onVerify }: { session: any, onVerify: () => void 
                                     <div className="flex items-center gap-2">
                                         {r.status === 'present' ? (
                                             <CheckCircle className="w-4 h-4 text-green-500" />
-                                        ) : r.status === 'flagged' ? (
-                                            <AlertCircle className="w-4 h-4 text-amber-500" />
                                         ) : (
                                             <XCircle className="w-4 h-4 text-red-500" />
                                         )}
@@ -461,9 +459,7 @@ function SessionRow({ session, onVerify }: { session: any, onVerify: () => void 
                                     <div className="flex items-center gap-2">
                                         <span className={cn(
                                             "text-xs font-medium px-2 py-0.5 rounded-full",
-                                            r.status === 'present' ? 'bg-green-50 text-green-700' : 
-                                            r.status === 'flagged' ? 'bg-amber-50 text-amber-700' :
-                                            'bg-red-50 text-red-700'
+                                            r.status === 'present' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
                                         )}>
                                             {r.status}
                                         </span>

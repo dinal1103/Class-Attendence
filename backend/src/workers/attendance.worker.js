@@ -54,10 +54,12 @@ function cosineSimilarity(a, b) {
 function greedyMatch(detections, enrolledStudents, highThreshold, lowThreshold) {
     // Build all pairs: (detectionIdx, studentIdx, score)
     const pairs = [];
+    const THRESHOLD = 0.35;
+
     for (let d = 0; d < detections.length; d++) {
         for (let s = 0; s < enrolledStudents.length; s++) {
             const score = cosineSimilarity(detections[d].embedding, enrolledStudents[s].embedding);
-            if (score >= lowThreshold) {
+            if (score >= THRESHOLD) {
                 pairs.push({ d, s, score, bbox: detections[d].bbox });
             }
         }
@@ -78,7 +80,7 @@ function greedyMatch(detections, enrolledStudents, highThreshold, lowThreshold) 
         matches.push({
             studentId: enrolledStudents[pair.s].id,
             score: pair.score,
-            status: pair.score >= highThreshold ? 'present' : 'flagged',
+            status: 'present',
             bbox: pair.bbox,
             detectionIdx: pair.d
         });

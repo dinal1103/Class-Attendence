@@ -22,6 +22,7 @@ export const ROUTES = {
         DASHBOARD: '/admin',
         REPORTS: '/admin/reports',
         STAFF: '/admin/staff',
+        AUDIT: '/admin/audit',
     },
 
     HOD: {

@@ -35,6 +35,7 @@ import AdminReports from '@/modules/admin/AdminReports';
 import AdminDepartmentDetail from '@/modules/admin/AdminDepartmentDetail';
 import AdminClassDetail from '@/modules/admin/AdminClassDetail';
 import AdminStaffManagement from '@/modules/admin/AdminStaffManagement';
+import AdminAuditLogs from '@/modules/admin/AdminAuditLogs';
 
 // HOD
 import HodDashboard from '@/modules/hod/HodDashboard';
@@ -98,6 +99,7 @@ export default function App() {
                     <Route path="/admin/departments/:id" element={<AdminDepartmentDetail />} />
                     <Route path="/admin/classes/:id" element={<AdminClassDetail />} />
                     <Route path="/admin/reports" element={<AdminReports />} />
+                    <Route path="/admin/audit" element={<AdminAuditLogs />} />
                     <Route path="/admin/staff" element={<AdminStaffManagement />} />
                 </Route>
             </Route>

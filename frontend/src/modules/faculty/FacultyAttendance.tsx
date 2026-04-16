@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import * as XLSX from 'xlsx';
 import { Loader2, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import DataTable from '@/components/composite/DataTable';
@@ -27,6 +28,7 @@ interface SessionRow {
     date: string;
     time: string;
     rawDate: string;
+    rawRecords?: any[];
 }
 
 export default function FacultyAttendance() {
@@ -43,12 +45,13 @@ export default function FacultyAttendance() {
                     sessions.map(async (session) => {
                         let totalPresent = 0;
                         let totalAbsent = 0;
+                        let sessionRecords: any[] = [];
 
                         try {
                             const recRes = await api.get(`/attendance/sessions/${session._id}/records`);
-                            const records: AttendanceRecord[] = recRes.data;
-                            totalPresent = records.filter(r => r.status === 'present').length;
-                            totalAbsent = records.filter(r => r.status === 'absent').length;
+                            sessionRecords = recRes.data;
+                            totalPresent = sessionRecords.filter(r => r.status === 'present').length;
+                            totalAbsent = sessionRecords.filter(r => r.status === 'absent').length;
                         } catch {
                             // skip
                         }
@@ -64,6 +67,7 @@ export default function FacultyAttendance() {
                             date: d.toLocaleDateString(),
                             time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                             rawDate: d.toISOString(),
+                            rawRecords: sessionRecords
                         };
                     })
                 );
@@ -144,6 +148,41 @@ export default function FacultyAttendance() {
         );
     }
 
+    const handleExportDetails = (filteredSessions: SessionRow[]) => {
+        const exportData: any[] = [];
+        filteredSessions.forEach(session => {
+            if (session.rawRecords && session.rawRecords.length > 0) {
+                // Remove flagged, keep logic clean
+                session.rawRecords.forEach(r => {
+                    exportData.push({
+                        'Class Name': session.className,
+                        'Date': session.date,
+                        'Time': session.time,
+                        'Student Name': r.student_id?.name || 'Unknown',
+                        'Student Email': r.student_id?.email || '',
+                        'Status': r.status.toUpperCase()
+                    });
+                });
+            } else {
+                exportData.push({
+                    'Class Name': session.className,
+                    'Date': session.date,
+                    'Time': session.time,
+                    'Student Name': 'No record available',
+                    'Student Email': '',
+                    'Status': ''
+                });
+            }
+        });
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        // Force column widths
+        ws['!cols'] = [{ wch: 25 }, { wch: 12 }, { wch: 10 }, { wch: 25 }, { wch: 30 }, { wch: 15 }];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'DetailedAttendance');
+        XLSX.writeFile(wb, `detailed-attendance-${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
     return (
         <div className="space-y-6">
             <PageHeader title="Attendance Sessions" description="View and export all attendance session records" />
@@ -154,7 +193,7 @@ export default function FacultyAttendance() {
                 searchPlaceholder="Search by class name…"
                 dateKey="rawDate"
                 pageSize={10}
-                exportFileName="faculty-attendance"
+                onExport={handleExportDetails}
             />
         </div>
     );

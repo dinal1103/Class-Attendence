@@ -1,3 +1,3 @@
-1. Add a feature to Archive the Class to Faculty
-2. When a class is Archived it should Generate a Detailed Report for that Class and show it under HOD Audit Logs
-3. Currently No multiple photos are allowed to be uploaded for a single class but can be taken from the camera. Change this to allow multiple photos to be uploaded for a single class.
+1. In attedence viewer of Faculty we need to export the data. currently it only filters based on subject and date but we need to add filters for single class session too.
+2. we need to show which student was present and which was absent in the  generated excel file.
+3. completely change how we mark present if detection is greater than 35 they are present otherwise absent. No need for yellow marking
