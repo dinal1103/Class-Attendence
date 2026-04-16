@@ -30,7 +30,7 @@ const tabsByRole: Record<UserRole, TabItem[]> = {
     ],
     admin: [
         { label: 'Home', path: ROUTES.ADMIN.DASHBOARD, icon: LayoutDashboard },
-        { label: 'Enroll', path: ROUTES.ADMIN.ENROLLMENTS, icon: Users },
+        { label: 'Staff', path: ROUTES.ADMIN.STAFF, icon: Shield },
         { label: 'Reports', path: ROUTES.ADMIN.REPORTS, icon: BarChart3 },
     ],
     hod: [
