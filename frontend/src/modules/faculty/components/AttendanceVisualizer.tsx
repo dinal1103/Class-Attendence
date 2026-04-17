@@ -137,52 +137,6 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
                             style={{ opacity: imageLoaded ? 1 : 0 }}
                         />
                         
-                        {imageLoaded && detections.map((det, idx) => {
-                            const [left, top, right, bottom] = det.bbox;
-                            const width = (right - left) * scale.x;
-                            const height = (bottom - top) * scale.y;
-                            const x = left * scale.x;
-                            const y = top * scale.y;
-
-                            return (
-                                <div 
-                                    key={idx}
-                                    style={{
-                                        left: `${x}px`,
-                                        top: `${y}px`,
-                                        width: `${width}px`,
-                                        height: `${height}px`
-                                    }}
-                                    className={cn(
-                                        "absolute border-2 rounded-sm group cursor-help transition-all duration-200",
-                                        det.status === 'present' 
-                                            ? "border-green-500 bg-green-500/10 hover:bg-green-500/30" 
-                                            : "border-red-500 bg-red-500/10 hover:bg-red-500/30"
-                                    )}
-                                >
-                                    {/* Tooltip */}
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-20">
-                                        <div className="bg-white text-surface-900 text-[10px] px-2 py-1.5 rounded-md shadow-xl whitespace-nowrap border border-surface-100">
-                                            {det.isIdentified ? (
-                                                <div className="flex items-center gap-2">
-                                                    <div className={cn(
-                                                        "w-2 h-2 rounded-full",
-                                                        det.status === 'present' ? "bg-green-500" : "bg-red-500"
-                                                    )} />
-                                                    <span className="font-bold">{det.studentName}</span>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-2 text-red-600 font-semibold">
-                                                    <ShieldAlert className="w-3 h-3" />
-                                                    <span>Unidentified Face</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="w-2 h-2 bg-white border-r border-b border-surface-100 rotate-45 mx-auto -mt-1" />
-                                    </div>
-                                </div>
-                            );
-                        })}
                     </div>
                 )}
             </div>

@@ -105,3 +105,26 @@ def detect_all_faces(img_bgr):
         })
 
     return results
+
+
+def draw_targets_on_image(img_bgr, targets):
+    """
+    Draw bounding boxes and labels on the image.
+    targets: [{"bbox": [x1, y1, x2, y2], "label": "Name", "color": [b, g, r]}]
+    """
+    canvas = img_bgr.copy()
+    for t in targets:
+        bbox = [int(x) for x in t["bbox"]]
+        label = t.get("label", "")
+        color = t.get("color", (0, 255, 0)) # Default green
+        
+        # Draw box
+        cv2.rectangle(canvas, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
+        
+        # Draw label background
+        if label:
+            (w, h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+            cv2.rectangle(canvas, (bbox[0], bbox[1] - 20), (bbox[0] + w, bbox[1]), color, -1)
+            cv2.putText(canvas, label, (bbox[0], bbox[1] - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            
+    return canvas

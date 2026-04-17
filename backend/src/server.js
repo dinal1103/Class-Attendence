@@ -24,6 +24,8 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // --------------------------------------------------
 // Global Middleware & Security Limits
 // --------------------------------------------------

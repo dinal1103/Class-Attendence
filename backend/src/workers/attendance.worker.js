@@ -79,6 +79,7 @@ function greedyMatch(detections, enrolledStudents, highThreshold, lowThreshold) 
 
         matches.push({
             studentId: enrolledStudents[pair.s].id,
+            studentName: enrolledStudents[pair.s].name,
             score: pair.score,
             status: 'present',
             bbox: pair.bbox,
@@ -125,6 +126,7 @@ async function processAttendance(job) {
         // Decrypt embeddings
         const enrolledStudents = enrolledUsers.map(u => ({
             id: u._id,
+            name: u.name,
             embedding: decrypt(u.embedding)
         }));
 
@@ -166,6 +168,24 @@ async function processAttendance(job) {
             }
         }
         session.unidentifiedDetections = unidentified;
+
+        // 5c. Visualize (Draw boxes on image and overwrite)
+        try {
+            if (imagePaths.length > 0) {
+                const targets = [];
+                for (const match of matches) {
+                    targets.push({ bbox: match.bbox, label: match.studentName, status: match.status });
+                }
+                for (const un of unidentified) {
+                    targets.push({ bbox: un.bbox, label: 'Unknown', status: 'unknown' });
+                }
+                const fs = require('fs');
+                const drawnBuffer = await aiClient.visualizeAttendance(imagePaths[0], targets);
+                fs.writeFileSync(imagePaths[0], drawnBuffer);
+            }
+        } catch (visErr) {
+            console.error(`[Worker] Session ${sessionId} Visualization Failed:`, visErr.message);
+        }
 
         // 6. Build attendance records
         const records = [];

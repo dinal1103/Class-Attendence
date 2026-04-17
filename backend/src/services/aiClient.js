@@ -69,4 +69,26 @@ async function healthCheck() {
     return res.data;
 }
 
-module.exports = { getStudentEmbedding, getClassroomDetections, healthCheck };
+/**
+ * Draw bounding boxes over the classroom image using OpenCV.
+ */
+async function visualizeAttendance(imagePath, targets) {
+    const form = new FormData();
+    form.append('image', fs.createReadStream(imagePath), path.basename(imagePath));
+    form.append('targets_json', JSON.stringify(targets));
+
+    const res = await axios.post(`${AI_BASE}/visualize`, form, {
+        headers: {
+            ...form.getHeaders(),
+            'X-API-Key': config.ai.apiKey
+        },
+        responseType: 'arraybuffer', // Important to save binary image data
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        timeout: 120_000
+    });
+
+    return res.data; // returns Buffer
+}
+
+module.exports = { getStudentEmbedding, getClassroomDetections, healthCheck, visualizeAttendance };

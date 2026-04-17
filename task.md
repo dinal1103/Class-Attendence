@@ -1,3 +1,3 @@
-1. [x] Archiving Doesnt work at the moment
-2. [x] detailed report is not session based filterable
-3. [x] remove attendence record from admin view
+1. [x] Any Student must only see his attendence for session as present or absent currently it shows all the student as present or absent.
+2. [x] There are still role selection at the registration page which needs to be remove
+3. [x] we shows face marking in faculty dashboard for each session. Currently it happens at node. make it that opencv stores the image with present and absent bounding box and use it directly so no more things happens at node.

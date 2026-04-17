@@ -17,11 +17,12 @@ import logging
 
 import cv2
 import numpy as np
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Security, Depends
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Security, Depends, Response
 from fastapi.security.api_key import APIKeyHeader
 from fastapi.responses import JSONResponse
+import json
 
-from enrollment_embeddings import compute_student_embedding, detect_all_faces
+from enrollment_embeddings import compute_student_embedding, detect_all_faces, draw_targets_on_image
 
 # Security
 API_KEY_NAME = "X-API-Key"
@@ -155,6 +156,52 @@ async def classroom_embedding(
         all_detections.extend(detections)
 
     return JSONResponse(content=all_detections)
+
+
+# -------------------------------------------------------
+# POST /visualize
+# -------------------------------------------------------
+@app.post("/visualize")
+async def visualize_attendance(
+    image: UploadFile = File(...),
+    targets_json: str = Form(...),
+    api_key: str = Depends(get_api_key),
+):
+    """
+    Draw bounding boxes on a classroom image.
+    Input:
+      - image (file)
+      - targets_json (form field, JSON string): [{"bbox": [x1,y1,x2,y2], "label": "Name", "status": "present"|"absent"|"unknown"}]
+    """
+    content = await image.read()
+    np_arr = np.frombuffer(content, np.uint8)
+    img_bgr = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+    if img_bgr is None:
+        raise HTTPException(status_code=400, detail="Could not decode image.")
+
+    try:
+        targets = json.loads(targets_json)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid targets_json.")
+
+    # Convert status to colors
+    # present = Green (0, 255, 0)
+    # absent = Red (0, 0, 255)
+    # unknown = Red (0, 0, 255)
+    processed_targets = []
+    for t in targets:
+        color = (0, 255, 0) if t.get("status") == "present" else (0, 0, 255)
+        processed_targets.append({
+            "bbox": t["bbox"],
+            "label": t.get("label", ""),
+            "color": color
+        })
+
+    marked_img = draw_targets_on_image(img_bgr, processed_targets)
+    
+    _, buffer = cv2.imencode(".jpg", marked_img)
+    return Response(content=buffer.tobytes(), media_type="image/jpeg")
 
 
 # -------------------------------------------------------

@@ -155,10 +155,17 @@ exports.getSession = async (req, res, next) => {
  */
 exports.getSessionRecords = async (req, res, next) => {
     try {
-        const records = await AttendanceRecord.find({
+        const filter = {
             session_id: req.params.id,
             tenant_id: req.tenantId
-        }).populate('student_id', 'name email enrollmentId');
+        };
+
+        // Student sees only their own record
+        if (req.user.role === 'student') {
+            filter.student_id = req.user.user_id;
+        }
+
+        const records = await AttendanceRecord.find(filter).populate('student_id', 'name email enrollmentId');
 
         res.json(records);
     } catch (err) {

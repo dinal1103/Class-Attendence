@@ -79,20 +79,6 @@ export default function RegisterPage() {
                             onChange={(e) => setForm({ ...form, password: e.target.value })}
                             leftIcon={<Lock className="w-4 h-4" />} required />
 
-                        {/* Role Selector */}
-                        <div className="space-y-1.5">
-                            <label className="block text-sm font-medium text-surface-700">Role</label>
-                            <select
-                                value={form.role}
-                                onChange={(e) => setForm({ ...form, role: e.target.value })}
-                                className="flex h-10 w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                            >
-                                <option value="student">Student</option>
-                                <option value="faculty">Faculty</option>
-                                <option value="hod">HOD</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
 
                         {form.role === 'student' && (
                             <Input label="Enrollment ID" placeholder="e.g. 2024CS001" value={form.enrollmentId}
