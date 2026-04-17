@@ -7,6 +7,7 @@ import { Input } from '@/components/primitives/Input';
 import { Badge } from '@/components/primitives/Badge';
 import { EmptyState } from '@/components/composite/EmptyState';
 import api from '@/api/axios';
+import { AlertCircle } from 'lucide-react';
 
 interface StaffUser {
     _id: string;
@@ -156,6 +157,25 @@ export default function AdminStaffManagement() {
                         </Button>
                     </div>
                 </div>
+
+                {/* Instructions Alert */}
+                <Card className="bg-primary-50/50 border-primary-100">
+                    <CardContent className="p-4 flex gap-3">
+                        <AlertCircle className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                            <p className="text-sm font-semibold text-primary-900">How to add Staff Members</p>
+                            <p className="text-xs text-primary-700 leading-relaxed">
+                                You can add staff members individually using the <strong>Add Staff</strong> button, or in bulk by uploading an Excel file. 
+                                For bulk uploads, download the <strong>Template</strong> first to ensure your file has the correct columns: 
+                                <code className="mx-1 bg-white/50 px-1 rounded">Name</code>, 
+                                <code className="mx-1 bg-white/50 px-1 rounded">Email</code>, 
+                                <code className="mx-1 bg-white/50 px-1 rounded">Password</code>, 
+                                <code className="mx-1 bg-white/50 px-1 rounded">Role</code> (faculty/hod), and 
+                                <code className="mx-1 bg-white/50 px-1 rounded">DepartmentCode</code>.
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 {loading ? (
                     <div className="flex items-center justify-center py-12">

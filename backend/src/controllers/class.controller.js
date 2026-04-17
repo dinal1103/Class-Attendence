@@ -181,34 +181,55 @@ exports.archiveClass = async (req, res, next) => {
             return res.status(403).json({ error: 'Not authorized to archive this class.' });
         }
 
+        const fs = require('fs');
+
         // Generate Report
-        const sessions = await AttendanceSession.find({ class_id: cls._id, status: 'completed' });
+        const sessions = await AttendanceSession.find({ class_id: cls._id, status: 'completed' }).sort({ createdAt: 1 });
         const totalSessions = sessions.length;
+        const sessionIds = sessions.map(s => s._id);
 
         let studentReport = [];
         if (totalSessions > 0) {
-            const records = await AttendanceRecord.find({ session_id: { $in: sessions.map(s => s._id) } }).populate('student_id', 'name email');
+            const records = await AttendanceRecord.find({ session_id: { $in: sessionIds } }).populate('student_id', 'name email enrollmentId');
             
+            // Map records to student status by session
             const studentStats = {};
-            for (const record of records) {
-                const sid = record.student_id ? record.student_id._id.toString() : 'unknown';
-                if (!studentStats[sid]) {
-                    studentStats[sid] = { name: record.student_id ? record.student_id.name : 'Unknown Student', totalPresent: 0, totalClasses: totalSessions };
-                }
-                if (record.status === 'present' || record.status === 'flagged') {
-                    studentStats[sid].totalPresent++;
-                }
+            
+            // Initialize stats for all enrolled students
+            for (const student of cls.students) {
+                studentStats[student._id.toString()] = {
+                    name: student.name,
+                    enrollmentId: student.enrollmentId || 'N/A',
+                    totalPresent: 0,
+                    attendanceStatuses: new Array(totalSessions).fill('absent')
+                };
             }
+
+            // Populate presence
+            records.forEach(record => {
+                const sid = record.student_id ? record.student_id._id.toString() : null;
+                if (sid && studentStats[sid]) {
+                    const sessionIndex = sessionIds.findIndex(id => id.toString() === record.session_id.toString());
+                    if (sessionIndex !== -1) {
+                        studentStats[sid].attendanceStatuses[sessionIndex] = record.status;
+                        if (record.status === 'present' || record.status === 'flagged') {
+                            studentStats[sid].totalPresent++;
+                        }
+                    }
+                }
+            });
             
             studentReport = Object.values(studentStats).map(s => ({
                 name: s.name,
-                attendancePercentage: Math.round((s.totalPresent / s.totalClasses) * 100),
-                totalPresent: s.totalPresent
+                enrollmentId: s.enrollmentId,
+                attendancePercentage: Math.round((s.totalPresent / totalSessions) * 100),
+                totalPresent: s.totalPresent,
+                attendanceStatuses: s.attendanceStatuses
             }));
         }
 
         // Create Audit Log
-        await AuditLog.create({
+        const auditLog = await AuditLog.create({
             tenant_id: req.tenantId,
             type: 'class_archived',
             class_id: cls._id,
@@ -216,15 +237,34 @@ exports.archiveClass = async (req, res, next) => {
             details: {
                 totalStudents: cls.students.length,
                 totalSessions,
+                sessionDates: sessions.map(s => s.createdAt),
                 students: studentReport
             }
         });
+
+        // --------------------------------------------------
+        // THE PURGE: Delete records and session files
+        // --------------------------------------------------
+        await AttendanceRecord.deleteMany({ session_id: { $in: sessionIds } });
+        await AttendanceSession.deleteMany({ class_id: cls._id });
+
+        // Delete physical folders
+        for (const session of sessions) {
+            try {
+                const sessionDir = path.join(storage.getBaseDir(), session._id.toString());
+                if (fs.existsSync(sessionDir)) {
+                    fs.rmSync(sessionDir, { recursive: true, force: true });
+                }
+            } catch (err) {
+                console.error(`Failed to delete storage for session ${session._id}`, err);
+            }
+        }
 
         // Mark as inactive
         cls.isActive = false;
         await cls.save();
 
-        res.json({ message: 'Class archived successfully', class: cls });
+        res.json({ message: 'Class archived successfully, records purged.', auditLogId: auditLog._id });
     } catch (err) {
         next(err);
     }

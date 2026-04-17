@@ -31,7 +31,6 @@ import FacultyClassDetail from '@/modules/faculty/FacultyClassDetail';
 
 // Admin
 import AdminDashboard from '@/modules/admin/AdminDashboard';
-import AdminReports from '@/modules/admin/AdminReports';
 import AdminDepartmentDetail from '@/modules/admin/AdminDepartmentDetail';
 import AdminClassDetail from '@/modules/admin/AdminClassDetail';
 import AdminStaffManagement from '@/modules/admin/AdminStaffManagement';
@@ -97,7 +96,6 @@ export default function App() {
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/admin/departments/:id" element={<AdminDepartmentDetail />} />
                     <Route path="/admin/classes/:id" element={<AdminClassDetail />} />
-                    <Route path="/admin/reports" element={<AdminReports />} />
                     <Route path="/admin/audit" element={<AdminAuditLogs />} />
                     <Route path="/admin/staff" element={<AdminStaffManagement />} />
                 </Route>

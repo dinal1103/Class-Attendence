@@ -3,7 +3,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/composite/EmptyState';
 import { Card, CardContent } from '@/components/primitives/Card';
 import { Button } from '@/components/primitives/Button';
-import { Loader2, FileText, X, Archive, Calendar, Users, Percent } from 'lucide-react';
+import { Loader2, FileText, X, Archive, Calendar, Users, Percent, CheckCircle2, XCircle } from 'lucide-react';
 import api from '@/api/axios';
 
 interface AuditLog {
@@ -105,38 +105,64 @@ export default function HodAuditLogs() {
                                 </div>
                             </div>
 
-                            <h3 className="text-sm font-bold text-surface-900 uppercase tracking-wider mb-4">Student Roster</h3>
+                            <h3 className="text-sm font-bold text-surface-900 uppercase tracking-wider mb-4">Detailed Attendance History</h3>
                             
                             {(!selectedLog.details?.students || selectedLog.details.students.length === 0) ? (
                                 <p className="text-sm text-surface-500 py-4 text-center bg-surface-50 rounded-lg">No student data available.</p>
                             ) : (
-                                <div className="border border-surface-200 rounded-xl overflow-hidden">
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="bg-surface-50 border-b border-surface-200 text-surface-600">
-                                            <tr>
-                                                <th className="px-4 py-3 font-medium">Student Name</th>
-                                                <th className="px-4 py-3 font-medium text-center">Classes Attended</th>
-                                                <th className="px-4 py-3 font-medium text-right">Attendance %</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-surface-100">
-                                            {selectedLog.details.students.map((student: any, idx: number) => (
-                                                <tr key={idx} className="hover:bg-surface-50/50">
-                                                    <td className="px-4 py-3 font-medium text-surface-900">{student.name}</td>
-                                                    <td className="px-4 py-3 text-surface-600 text-center">{student.totalPresent} / {selectedLog.details.totalSessions}</td>
-                                                    <td className="px-4 py-3 text-right">
-                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                            student.attendancePercentage >= 75 ? 'bg-green-100 text-green-800' :
-                                                            student.attendancePercentage >= 50 ? 'bg-yellow-100 text-yellow-800' :
-                                                            'bg-red-100 text-red-800'
+                                <div className="border border-surface-200 rounded-xl overflow-hidden bg-white">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-xs text-left border-collapse">
+                                            <thead className="bg-surface-50 border-b border-surface-200 text-surface-600">
+                                                <tr>
+                                                    <th className="px-4 py-3 font-bold sticky left-0 bg-surface-50 z-10 border-r border-surface-200 min-w-[150px]">Student Name</th>
+                                                    <th className="px-3 py-3 font-bold text-center">ID</th>
+                                                    <th className="px-3 py-3 font-bold text-center border-r border-surface-100 italic">%</th>
+                                                    {selectedLog.details.sessionDates?.map((date: string, idx: number) => (
+                                                        <th key={idx} className="px-2 py-3 font-medium text-center min-w-[60px] border-r border-surface-100">
+                                                            <div className="flex flex-col items-center">
+                                                                <span>{new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                                                <span className="text-[10px] text-surface-400 font-normal">{new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                            </div>
+                                                        </th>
+                                                    ))}
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-surface-100">
+                                                {selectedLog.details.students.map((student: any, idx: number) => (
+                                                    <tr key={idx} className="hover:bg-surface-50/50">
+                                                        <td className="px-4 py-3 font-semibold text-surface-900 sticky left-0 bg-white group-hover:bg-surface-50 z-10 border-r border-surface-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                                                            <div className="truncate w-[130px]">{student.name}</div>
+                                                        </td>
+                                                        <td className="px-3 py-3 text-surface-500 text-center font-mono text-[10px]">{student.enrollmentId}</td>
+                                                        <td className={`px-3 py-3 text-center border-r border-surface-100 font-bold ${
+                                                            student.attendancePercentage >= 75 ? 'text-green-600' :
+                                                            student.attendancePercentage >= 50 ? 'text-yellow-600' :
+                                                            'text-red-600'
                                                         }`}>
                                                             {student.attendancePercentage}%
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                                        </td>
+                                                        {student.attendanceStatuses?.map((status: string, sIdx: number) => (
+                                                            <td key={sIdx} className="px-2 py-3 text-center border-r border-surface-100">
+                                                                {status === 'present' || status === 'flagged' ? (
+                                                                    <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />
+                                                                ) : (
+                                                                    <XCircle className="w-4 h-4 text-surface-200 mx-auto" />
+                                                                )}
+                                                            </td>
+                                                        ))}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div className="p-3 bg-surface-50 border-t border-surface-200 flex items-center justify-between text-[10px] text-surface-500 font-medium italic">
+                                        <span>* Scroll horizontally to view all session dates</span>
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-green-500" /> Present</div>
+                                            <div className="flex items-center gap-1.5"><XCircle className="w-3 h-3 text-surface-300" /> Absent</div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
