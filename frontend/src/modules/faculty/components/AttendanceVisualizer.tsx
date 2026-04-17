@@ -20,6 +20,7 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
     const [loading, setLoading] = useState(true);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [detections, setDetections] = useState<BBox[]>([]);
+    const [totalImages, setTotalImages] = useState(1);
     const [imageIdx, setImageIdx] = useState(0);
     const [error, setError] = useState<string | null>(null);
     const imgRef = useRef<HTMLImageElement>(null);
@@ -36,6 +37,8 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
 
                 const session = sessionRes.data;
                 const records = recordsRes.data;
+
+                setTotalImages(session.imagePaths?.length || 1);
 
                 const allDetections: BBox[] = [];
 
@@ -128,14 +131,34 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
             <div className="h-16 px-6 flex items-center justify-between text-white border-b border-white/10">
                 <div>
                     <h3 className="text-lg font-bold">Recognition Analysis</h3>
-                    <p className="text-xs text-white/50">Green: Present • Red: Unidentified</p>
+                    <p className="text-xs text-white/50">Green: Present • Red: Unidentified • Photo {imageIdx + 1} of {totalImages}</p>
                 </div>
-                <button 
-                    onClick={onClose}
-                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                >
-                    <X className="w-6 h-6" />
-                </button>
+                <div className="flex items-center gap-4">
+                    {totalImages > 1 && (
+                        <div className="flex items-center gap-2 bg-white/5 rounded-full p-1 border border-white/10">
+                            <button 
+                                onClick={() => setImageIdx(prev => Math.max(0, prev - 1))}
+                                disabled={imageIdx === 0}
+                                className="px-3 py-1 text-xs font-semibold hover:bg-white/10 rounded-full disabled:opacity-30 transition-colors"
+                            >
+                                Previous
+                            </button>
+                            <button 
+                                onClick={() => setImageIdx(prev => Math.min(totalImages - 1, prev + 1))}
+                                disabled={imageIdx === totalImages - 1}
+                                className="px-3 py-1 text-xs font-semibold hover:bg-white/10 rounded-full disabled:opacity-30 transition-colors"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
+                    <button 
+                        onClick={onClose}
+                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
             </div>
 
             {/* Main Viewport */}

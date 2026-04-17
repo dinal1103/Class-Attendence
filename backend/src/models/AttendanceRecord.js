@@ -31,6 +31,10 @@ const attendanceRecordSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    imageIndex: {
+        type: Number,
+        default: 0
+    },
     // Was this record manually overridden via dispute?
     manualOverride: {
         type: Boolean,

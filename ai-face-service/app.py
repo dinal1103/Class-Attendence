@@ -152,7 +152,7 @@ async def classroom_embedding(
 
     all_detections = []
 
-    for img_file in images:
+    for idx, img_file in enumerate(images):
         content = await img_file.read()
         if not content:
             logger.warning(f"File {img_file.filename} is empty, skipping.")
@@ -167,6 +167,11 @@ async def classroom_embedding(
 
         detections = detect_all_faces(img_bgr)
         logger.info(f"Detected {len(detections)} faces in {img_file.filename}")
+        
+        # Inject imageIndex into each detection
+        for det in detections:
+            det["imageIndex"] = idx
+            
         all_detections.extend(detections)
 
     return JSONResponse(content=all_detections)

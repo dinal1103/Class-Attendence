@@ -60,7 +60,7 @@ function greedyMatch(detections, enrolledStudents, highThreshold, lowThreshold) 
         for (let s = 0; s < enrolledStudents.length; s++) {
             const score = cosineSimilarity(detections[d].embedding, enrolledStudents[s].embedding);
             if (score >= THRESHOLD) {
-                pairs.push({ d, s, score, bbox: detections[d].bbox });
+                pairs.push({ d, s, score, bbox: detections[d].bbox, imageIndex: detections[d].imageIndex });
             }
         }
     }
@@ -83,6 +83,7 @@ function greedyMatch(detections, enrolledStudents, highThreshold, lowThreshold) 
             score: pair.score,
             status: 'present',
             bbox: pair.bbox,
+            imageIndex: pair.imageIndex,
             detectionIdx: pair.d
         });
     }
@@ -163,25 +164,46 @@ async function processAttendance(job) {
             if (!matchedDetectionIndices.has(i)) {
                 unidentified.push({
                     bbox: detections[i].bbox,
-                    imageIndex: 0 // Simplification: assume first image for now if multiple aren't keyed
+                    imageIndex: detections[i].imageIndex || 0
                 });
             }
         }
         session.unidentifiedDetections = unidentified;
 
-        // 5c. Visualize (Draw boxes on image and overwrite)
+        // 5c. Visualize (Draw boxes on ALL images and overwrite)
         try {
             if (imagePaths.length > 0) {
-                const targets = [];
-                for (const match of matches) {
-                    targets.push({ bbox: match.bbox, label: match.studentName, status: match.status });
-                }
-                for (const un of unidentified) {
-                    targets.push({ bbox: un.bbox, label: 'Unknown', status: 'unknown' });
-                }
                 const fs = require('fs');
-                const drawnBuffer = await aiClient.visualizeAttendance(imagePaths[0], targets);
-                fs.writeFileSync(imagePaths[0], drawnBuffer);
+                for (let i = 0; i < imagePaths.length; i++) {
+                    const targetsForThisImage = [];
+                    
+                    // Match identified targets for this image
+                    for (const match of matches) {
+                        if (match.imageIndex === i) {
+                            targetsForThisImage.push({ 
+                                bbox: match.bbox, 
+                                label: match.studentName, 
+                                status: match.status 
+                            });
+                        }
+                    }
+                    
+                    // Match unidentified targets for this image
+                    for (const un of unidentified) {
+                        if (un.imageIndex === i) {
+                            targetsForThisImage.push({ 
+                                bbox: un.bbox, 
+                                label: 'Unknown', 
+                                status: 'unknown' 
+                            });
+                        }
+                    }
+
+                    if (targetsForThisImage.length > 0) {
+                        const drawnBuffer = await aiClient.visualizeAttendance(imagePaths[i], targetsForThisImage);
+                        fs.writeFileSync(imagePaths[i], drawnBuffer);
+                    }
+                }
             }
         } catch (visErr) {
             console.error(`[Worker] Session ${sessionId} Visualization Failed:`, visErr.message);
@@ -198,7 +220,8 @@ async function processAttendance(job) {
                 student_id: match.studentId,
                 status: match.status,
                 confidenceScore: match.score,
-                bbox: match.bbox
+                bbox: match.bbox,
+                imageIndex: match.imageIndex
             });
         }
 
