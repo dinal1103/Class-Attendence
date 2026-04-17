@@ -96,7 +96,31 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const imageUrl = `${import.meta.env.VITE_API_URL || ''}/api/attendance/sessions/${sessionId}/image/${imageIdx}`;
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchImage = async () => {
+            try {
+                setImageLoaded(false);
+                const response = await api.get(`/attendance/sessions/${sessionId}/image/${imageIdx}`, {
+                    responseType: 'blob'
+                });
+                const url = URL.createObjectURL(response.data);
+                setImageUrl(url);
+            } catch (err) {
+                console.error('Failed to fetch session image:', err);
+                setError('Could not load classroom image.');
+            }
+        };
+
+        if (sessionId) {
+            fetchImage();
+        }
+
+        return () => {
+            if (imageUrl) URL.revokeObjectURL(imageUrl);
+        };
+    }, [sessionId, imageIdx]);
 
     return (
         <div className="fixed inset-0 z-[60] flex flex-col bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
@@ -128,14 +152,16 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
                     </div>
                 ) : (
                     <div className="relative inline-block max-w-full">
-                        <img 
-                            ref={imgRef}
-                            src={imageUrl} 
-                            alt="Classroom" 
-                            className="max-h-[80vh] w-auto rounded-lg shadow-2xl transition-opacity duration-300"
-                            onLoad={handleImageLoad}
-                            style={{ opacity: imageLoaded ? 1 : 0 }}
-                        />
+                        {imageUrl && (
+                            <img 
+                                ref={imgRef}
+                                src={imageUrl} 
+                                alt="Classroom" 
+                                className="max-h-[80vh] w-auto rounded-lg shadow-2xl transition-opacity duration-300"
+                                onLoad={handleImageLoad}
+                                style={{ opacity: imageLoaded ? 1 : 0 }}
+                            />
+                        )}
                         
                     </div>
                 )}

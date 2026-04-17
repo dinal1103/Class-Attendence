@@ -36,7 +36,6 @@ const tabsByRole: Record<UserRole, TabItem[]> = {
     ],
     hod: [
         { label: 'Home', path: ROUTES.HOD.DASHBOARD, icon: LayoutDashboard },
-        { label: 'Approve', path: ROUTES.HOD.APPROVALS, icon: ClipboardList },
         { label: 'Audit', path: ROUTES.HOD.AUDIT, icon: Shield },
     ],
 };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Loader2, Trash2, Mail, Shield, Building2, X } from 'lucide-react';
+import { Users, Plus, Loader2, Trash2, Mail, Shield, Building2, X, FileUp, Download } from 'lucide-react';
 import { Button } from '@/components/primitives/Button';
 import { Card, CardContent } from '@/components/primitives/Card';
 import { Input } from '@/components/primitives/Input';
@@ -29,6 +29,7 @@ export default function AdminStaffManagement() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isBulkUploading, setIsBulkUploading] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -84,6 +85,40 @@ export default function AdminStaffManagement() {
         }
     };
 
+    const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        setIsBulkUploading(true);
+        try {
+            const res = await api.post('/admin/users/bulk', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            alert(res.data.message);
+            fetchData();
+        } catch (err: any) {
+            alert(err.response?.data?.error || 'Bulk upload failed');
+        } finally {
+            setIsBulkUploading(false);
+            e.target.value = ''; // Reset input
+        }
+    };
+
+    const downloadTemplate = () => {
+        const headers = ["Name", "Email", "Password", "Role", "DepartmentCode"];
+        const data = ["John Doe", "john@example.com", "pass123", "faculty", "CS"];
+        const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + data.join(",");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "staff_template.csv");
+        document.body.appendChild(link);
+        link.click();
+    };
+
     return (
         <>
             <div className="space-y-6">
@@ -92,9 +127,34 @@ export default function AdminStaffManagement() {
                         <h1 className="text-xl sm:text-2xl font-bold text-surface-900">Staff Management</h1>
                         <p className="text-surface-500 text-sm mt-1">Manage Faculty and HOD accounts</p>
                     </div>
-                    <Button variant="primary" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setShowModal(true)}>
-                        Add Staff
-                    </Button>
+                    <div className="flex gap-2">
+                        <input
+                            type="file"
+                            id="bulk-upload"
+                            className="hidden"
+                            accept=".xlsx, .xls, .csv"
+                            onChange={handleBulkUpload}
+                        />
+                        <Button 
+                            variant="secondary" 
+                            leftIcon={<Download className="w-4 h-4" />} 
+                            onClick={downloadTemplate}
+                            className="hidden sm:flex"
+                        >
+                            Template
+                        </Button>
+                        <Button 
+                            variant="secondary" 
+                            leftIcon={isBulkUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />} 
+                            onClick={() => document.getElementById('bulk-upload')?.click()}
+                            disabled={isBulkUploading}
+                        >
+                            Bulk Import
+                        </Button>
+                        <Button variant="primary" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setShowModal(true)}>
+                            Add Staff
+                        </Button>
+                    </div>
                 </div>
 
                 {loading ? (

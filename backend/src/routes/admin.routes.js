@@ -13,5 +13,6 @@ router.use(authMiddleware, tenantScope, authorize('admin'));
 router.post('/users', ctrl.createUser);
 router.get('/users', ctrl.listUsers);
 router.delete('/users/:id', ctrl.deleteUser);
+router.post('/users/bulk', ctrl.bulkUploadMiddleware, ctrl.bulkCreateUsers);
 
 module.exports = router;

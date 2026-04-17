@@ -50,6 +50,20 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 
 
 # -------------------------------------------------------
+# Startup Event
+# -------------------------------------------------------
+@app.on_event("startup")
+async def startup_event():
+    # Eagerly initialize InsightFace models to prevent first-request timeouts
+    logger.info("Initializing InsightFace model...")
+    try:
+        from enrollment_embeddings import get_app
+        get_app()
+        logger.info("InsightFace model initialized successfully.")
+    except Exception as e:
+        logger.error(f"Failed to initialize InsightFace model: {e}")
+
+# -------------------------------------------------------
 # Health Check
 # -------------------------------------------------------
 @app.get("/health")

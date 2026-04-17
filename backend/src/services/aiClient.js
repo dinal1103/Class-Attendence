@@ -30,7 +30,7 @@ async function getStudentEmbedding(studentId, imagePaths) {
         },
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
-        timeout: 120_000 // 2 min for heavy AI inference
+        timeout: 600_000 // 10 min for heavy AI inference and first-run model downloads
     });
 
     return res.data;
@@ -55,7 +55,7 @@ async function getClassroomDetections(imagePaths) {
         },
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
-        timeout: 120_000
+        timeout: 600_000
     });
 
     return res.data;
@@ -85,7 +85,7 @@ async function visualizeAttendance(imagePath, targets) {
         responseType: 'arraybuffer', // Important to save binary image data
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
-        timeout: 120_000
+        timeout: 600_000
     });
 
     return res.data; // returns Buffer

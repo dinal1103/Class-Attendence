@@ -1,3 +1,5 @@
-1. [x] Any Student must only see his attendence for session as present or absent currently it shows all the student as present or absent.
-2. [x] There are still role selection at the registration page which needs to be remove
-3. [x] we shows face marking in faculty dashboard for each session. Currently it happens at node. make it that opencv stores the image with present and absent bounding box and use it directly so no more things happens at node.
+1. [x] Ability to add staff in bulk using excel file
+2. [x] Remove Approval Page from HOD as it doesnt do anything
+3. [x] Answer Following Questions.
+    a. [x] When Faculty uploads session photo it goes to redis then it is processed on AI-Service. If Yes does AI-service deside who is present or not or does it just extract faces and send it to backend?
+    b. [x] We are storing a bounded box around the face. Does it store in Database? Who stores them AI-Service or Node?

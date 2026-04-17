@@ -39,7 +39,6 @@ import AdminAuditLogs from '@/modules/admin/AdminAuditLogs';
 
 // HOD
 import HodDashboard from '@/modules/hod/HodDashboard';
-import HodApprovals from '@/modules/hod/HodApprovals';
 import HodAuditLogs from '@/modules/hod/HodAuditLogs';
 
 export default function App() {
@@ -108,7 +107,6 @@ export default function App() {
             <Route element={<PrivateRoute allowedRoles={['hod']} />}>
                 <Route element={<AppLayout />}>
                     <Route path="/hod" element={<HodDashboard />} />
-                    <Route path="/hod/approvals" element={<HodApprovals />} />
                     <Route path="/hod/audit" element={<HodAuditLogs />} />
                 </Route>
             </Route>
