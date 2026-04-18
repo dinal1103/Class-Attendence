@@ -59,14 +59,8 @@ export default function AppLayout() {
             ) : (
                 /* Mobile: MobileHeader + BottomNav */
                 <>
-                    <Sidebar
-                        isCollapsed={false}
-                        onToggleCollapse={() => { }}
-                        mobileOpen={mobileSidebarOpen}
-                        onMobileClose={() => setMobileSidebarOpen(false)}
-                    />
                     <MobileHeader />
-                    <main className="p-4 pb-20 min-h-[calc(100vh-56px-64px)]">
+                    <main className="p-4 pb-24 min-h-[calc(100vh-56px-64px)]">
                         <AnimatePresence mode="wait" initial={false}>
                             <motion.div
                                 key={location.pathname}

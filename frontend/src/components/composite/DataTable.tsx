@@ -137,44 +137,44 @@ export default function DataTable<T extends Record<string, any>>({
     return (
         <div className="space-y-4">
             {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-                <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center flex-1 w-full">
+            <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+                <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center flex-1 w-full">
                     {/* Search */}
                     {searchKey && (
-                        <div className="relative w-full sm:w-64">
+                        <div className="relative w-full lg:w-64">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
                             <input
                                 type="text"
                                 placeholder={searchPlaceholder}
                                 value={search}
                                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                                className="w-full h-9 pl-9 pr-3 rounded-lg border border-surface-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="w-full h-10 lg:h-9 pl-9 pr-3 rounded-lg border border-surface-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                             />
                         </div>
                     )}
 
                     {/* Date Range */}
                     {dateKey && (
-                        <div className="flex gap-2 items-center">
+                        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
                             <input
                                 type="date"
                                 value={dateFrom}
                                 onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-                                className="h-9 px-2 rounded-lg border border-surface-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="h-10 lg:h-9 px-2 rounded-lg border border-surface-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-full sm:w-auto"
                             />
-                            <span className="text-xs text-surface-400">to</span>
+                            <span className="hidden sm:inline text-xs text-surface-400">to</span>
                             <input
                                 type="date"
                                 value={dateTo}
                                 onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-                                className="h-9 px-2 rounded-lg border border-surface-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="h-10 lg:h-9 px-2 rounded-lg border border-surface-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-full sm:w-auto"
                             />
                         </div>
                     )}
                 </div>
 
                 {/* Export */}
-                <Button size="sm" variant="secondary" leftIcon={<Download className="w-4 h-4" />} onClick={handleExport}>
+                <Button size="sm" variant="secondary" leftIcon={<Download className="w-4 h-4" />} onClick={handleExport} className="w-full lg:w-auto">
                     Export
                 </Button>
             </div>

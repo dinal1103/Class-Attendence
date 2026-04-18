@@ -112,7 +112,7 @@ export default function StudentDashboard() {
                 <>
                     {/* Stats Grid */}
                     <motion.div variants={listVariants} initial="initial" animate="animate"
-                        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                         <StatCard title="Total Lectures" value={stats?.totalLectures ?? 0} icon={<BookOpen className="w-6 h-6" />}
                             iconBgColor="#EFF6FF" iconColor="#2563EB" />
                         <StatCard title="Present" value={stats?.present ?? 0} icon={<CheckCircle className="w-6 h-6" />}
@@ -136,7 +136,7 @@ export default function StudentDashboard() {
                         {classes.length === 0 ? (
                             <EmptyState icon="clipboard" title="No classes yet" description="Click 'Join Class' to get started." compact />
                         ) : (
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {classes.map(cls => (
                                     <Card key={cls._id}
                                         className="cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"

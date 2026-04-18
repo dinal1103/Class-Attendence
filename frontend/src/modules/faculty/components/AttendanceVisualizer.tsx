@@ -133,25 +133,7 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
                     <h3 className="text-lg font-bold">Recognition Analysis</h3>
                     <p className="text-xs text-white/50">Green: Present • Red: Unidentified • Photo {imageIdx + 1} of {totalImages}</p>
                 </div>
-                <div className="flex items-center gap-4">
-                    {totalImages > 1 && (
-                        <div className="flex items-center gap-2 bg-white/5 rounded-full p-1 border border-white/10">
-                            <button 
-                                onClick={() => setImageIdx(prev => Math.max(0, prev - 1))}
-                                disabled={imageIdx === 0}
-                                className="px-3 py-1 text-xs font-semibold hover:bg-white/10 rounded-full disabled:opacity-30 transition-colors"
-                            >
-                                Previous
-                            </button>
-                            <button 
-                                onClick={() => setImageIdx(prev => Math.min(totalImages - 1, prev + 1))}
-                                disabled={imageIdx === totalImages - 1}
-                                className="px-3 py-1 text-xs font-semibold hover:bg-white/10 rounded-full disabled:opacity-30 transition-colors"
-                            >
-                                Next
-                            </button>
-                        </div>
-                    )}
+                <div className="flex items-center gap-2">
                     <button 
                         onClick={onClose}
                         className="p-2 hover:bg-white/10 rounded-full transition-colors"
@@ -192,15 +174,36 @@ export function AttendanceVisualizer({ sessionId, onClose }: AttendanceVisualize
 
             {/* Legend/Footer */}
             {!loading && !error && (
-                <div className="h-20 bg-black/40 border-t border-white/5 flex items-center justify-center gap-8 text-white/70 text-sm">
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-green-500" />
-                        <span>Present ({detections.filter(d => d.status === 'present').length})</span>
+                <div className="bg-black/40 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between p-4 gap-4 text-white/70 text-sm">
+                    <div className="flex items-center gap-8">
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-green-500" />
+                            <span>Present ({detections.filter(d => d.status === 'present').length})</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-500" />
+                            <span>Unknown ({detections.filter(d => !d.isIdentified).length})</span>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500" />
-                        <span>Unknown ({detections.filter(d => !d.isIdentified).length})</span>
-                    </div>
+
+                    {totalImages > 1 && (
+                        <div className="flex items-center gap-2 bg-white/5 rounded-full p-1 border border-white/10">
+                            <button 
+                                onClick={() => setImageIdx(prev => Math.max(0, prev - 1))}
+                                disabled={imageIdx === 0}
+                                className="px-5 py-1.5 sm:px-3 sm:py-1 text-xs font-semibold hover:bg-white/10 rounded-full disabled:opacity-30 transition-colors"
+                            >
+                                Previous
+                            </button>
+                            <button 
+                                onClick={() => setImageIdx(prev => Math.min(totalImages - 1, prev + 1))}
+                                disabled={imageIdx === totalImages - 1}
+                                className="px-5 py-1.5 sm:px-3 sm:py-1 text-xs font-semibold hover:bg-white/10 rounded-full disabled:opacity-30 transition-colors"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

@@ -132,7 +132,12 @@ async function processAttendance(job) {
         }));
 
         // 3. Call AI microservice
-        const imagePaths = storage.listFiles(session._id.toString());
+        const imagePaths = session.imagePaths || [];
+        if (imagePaths.length === 0) {
+            // Fallback to directory scan if paths array is missing for some reason
+            imagePaths.push(...storage.listFiles(session._id.toString()));
+        }
+        
         const detections = await aiClient.getClassroomDetections(imagePaths);
 
         session.totalDetections = detections.length;

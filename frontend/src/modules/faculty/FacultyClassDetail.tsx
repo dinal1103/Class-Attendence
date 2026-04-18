@@ -137,29 +137,33 @@ export default function FacultyClassDetail() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center gap-3">
-                <Button variant="secondary" size="sm" onClick={() => navigate(-1)} leftIcon={<ArrowLeft className="w-4 h-4" />}>Back</Button>
-                <div className="flex-1">
-                    <h1 className="text-xl font-bold text-surface-900">{cls.name}</h1>
-                    <p className="text-sm text-surface-500">{cls.department_id?.name || ''}</p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex items-center gap-3">
+                    <Button variant="secondary" size="sm" onClick={() => navigate(-1)} leftIcon={<ArrowLeft className="w-4 h-4" />} className="flex-shrink-0">Back</Button>
+                    <div className="min-w-0">
+                        <h1 className="text-xl font-bold text-surface-900 truncate">{cls.name}</h1>
+                        <p className="text-sm text-surface-500 truncate">{cls.department_id?.name || ''}</p>
+                    </div>
                 </div>
-                <Button variant="secondary" size="sm" onClick={copyCode}
-                    leftIcon={codeCopied ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}>
-                    {codeCopied ? 'Copied!' : `Copy Code: ${cls.code}`}
-                </Button>
-                <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    onClick={() => setShowArchiveModal(true)}
-                    leftIcon={<Archive className="w-4 h-4 text-red-500" />}
-                    className="border-red-200 hover:bg-red-50 text-red-700 hover:border-red-300"
-                >
-                    Archive
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button variant="secondary" size="sm" onClick={copyCode}
+                        leftIcon={codeCopied ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}>
+                        {codeCopied ? 'Copied!' : `Copy Code: ${cls.code}`}
+                    </Button>
+                    <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={() => setShowArchiveModal(true)}
+                        leftIcon={<Archive className="w-4 h-4 text-red-500" />}
+                        className="border-red-200 hover:bg-red-50 text-red-700 hover:border-red-300"
+                    >
+                        Archive
+                    </Button>
+                </div>
             </div>
 
             {/* Quick Stats + Add Attendance Button */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card>
                     <CardContent className="p-4 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center"><Users className="w-5 h-5 text-primary-600" /></div>

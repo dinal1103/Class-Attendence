@@ -109,7 +109,7 @@ export default function FacultyDashboard() {
                 <>
                     {/* Stats Grid */}
                     <motion.div variants={listVariants} initial="initial" animate="animate"
-                        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                         <StatCard title="My Classes" value={stats?.myClasses ?? 0} icon={<LayoutDashboard className="w-6 h-6" />}
                             iconBgColor="#EFF6FF" iconColor="#2563EB" />
                         <StatCard title="Total Students" value={stats?.totalStudents ?? 0} icon={<Users className="w-6 h-6" />}
@@ -126,7 +126,7 @@ export default function FacultyDashboard() {
                         {classes.length === 0 ? (
                             <EmptyState icon="clipboard" title="No classes" description="Create a class from the Classes page to get started." compact />
                         ) : (
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {classes.map(cls => (
                                     <Card key={cls._id}
                                         className="cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"

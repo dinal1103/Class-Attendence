@@ -29,22 +29,50 @@ app.set('trust proxy', 1);
 // --------------------------------------------------
 // Global Middleware & Security Limits
 // --------------------------------------------------
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: false,
+}));
+
+// Request Logger (for debugging connectivity)
+app.use((req, res, next) => {
+    console.log(`[Incoming] ${req.method} ${req.url} (Origin: ${req.get('origin') || 'no-origin'})`);
+    next();
+});
 
 // Restrict CORS array to your deployed frontend URLs
 const allowedOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',')
-    : ['http://localhost:3000', 'https://ronak-javiya.github.io', '*', 'https://ronak-pc.tailf0fdeb.ts.net/'];
+    : [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'https://ronak-javiya.github.io',
+        'https://ronak-pc.tailf0fdeb.ts.net',
+        '*'
+    ];
 
 app.use(cors({
     origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
+            console.error(`[CORS Error] Origin ${origin} not allowed`);
             callback(new Error('Not allowed by CORS'));
         }
-    }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-Tailscale-Challenge']
 }));
+
+// Explicitly handle Private Network Access preflights
+app.use((req, res, next) => {
+    if (req.headers['access-control-request-private-network']) {
+        res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    }
+    next();
+});
 
 app.use(morgan('dev'));
 app.use(express.json());

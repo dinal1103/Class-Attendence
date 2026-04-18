@@ -83,7 +83,7 @@ export default function FacultyClasses() {
             ) : classes.length === 0 ? (
                 <EmptyState icon="clipboard" title="No classes" description="Click 'Add Class' to create your first class." />
             ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {classes.map(cls => (
                         <Card key={cls._id} className="cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
                             onClick={() => navigate(`/faculty/classes/${cls._id}`)}>
